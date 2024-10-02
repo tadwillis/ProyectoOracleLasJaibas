@@ -23,6 +23,11 @@ jobs:
           # Full git history is needed to get a proper list of changed files
           fetch-depth: 0
 
+      - name: Copy Java Checks
+        run: |
+          mkdir -p /action/lib/.automation/
+          cp java_checks.xml /action/lib/.automation/java_checks.xml
+
       - name: Run Super-Linter
         uses: github/super-linter@v4
         env:
