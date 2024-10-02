@@ -53,7 +53,7 @@ jobs:
           VALIDATE_YAML: false
           VALIDATE_YAML_PRETTIER: false
           BASH_SEVERITY: warning
-          JAVA_FILE_NAME: java_checks.xml
+          JAVA_FILE_NAME: /home/runner/work/agile-organizer/agile-organizer/java_checks.xml
           VALIDATE_BASH_EXEC: false
           VALIDATE_BASH: false
           VALIDATE_KUBEVAL: false
