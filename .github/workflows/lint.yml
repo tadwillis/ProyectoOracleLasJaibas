@@ -28,7 +28,7 @@ jobs:
           ls -l 
       - name: Copy Java Checks
         run: |
-          cp java_checks.xml /action/lib/.automation/java_checks.xml
+          cp /home/runner/work/agile-organizer/agile-organizer/java_checks.xml /action/lib/.automation/java_checks.xml
 
       - name: Run Super-Linter
         uses: github/super-linter@v4
