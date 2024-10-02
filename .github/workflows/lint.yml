@@ -22,7 +22,10 @@ jobs:
         with:
           # Full git history is needed to get a proper list of changed files
           fetch-depth: 0
-
+      - name: Path
+        run: |
+          pwd
+          ls -l 
       - name: Copy Java Checks
         run: |
           cp java_checks.xml /action/lib/.automation/java_checks.xml
