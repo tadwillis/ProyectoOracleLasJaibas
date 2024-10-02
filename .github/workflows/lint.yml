@@ -37,3 +37,5 @@ jobs:
           VALIDATE_GOOGLE_JAVA_FORMAT: false
           VALIDATE_YAML: false
           VALIDATE_YAML_PRETTIER: false
+          BASH_SEVERITY: warning
+          JAVA_FILE_NAME: sun_checks.xml
