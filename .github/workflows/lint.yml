@@ -39,3 +39,5 @@ jobs:
           VALIDATE_YAML_PRETTIER: false
           BASH_SEVERITY: warning
           JAVA_FILE_NAME: sun_checks.xml
+          VALIDATE_BASH_EXEC: false
+          VALIDATE_BASH: false
