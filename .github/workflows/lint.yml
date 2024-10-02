@@ -25,7 +25,6 @@ jobs:
 
       - name: Copy Java Checks
         run: |
-          mkdir -p /action/lib/.automation/
           cp java_checks.xml /action/lib/.automation/java_checks.xml
 
       - name: Run Super-Linter
