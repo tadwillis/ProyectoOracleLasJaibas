@@ -26,9 +26,6 @@ jobs:
         run: |
           pwd
           ls -l 
-      - name: Copy Java Checks
-        run: |
-          ls /action/lib/.automation/
 
       - name: Run Super-Linter
         uses: github/super-linter@v4
