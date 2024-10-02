@@ -1,0 +1,39 @@
+name: Super Linter
+
+on:
+  push:
+    branches: null
+
+jobs:
+  super-lint:
+    name: Lint code base
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          # Full git history is needed to get a proper list of changed files
+          fetch-depth: 0
+
+      - name: Run Super-Linter
+        uses: github/super-linter@v4
+        env:
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: true
+          VALIDATE_KUBERNETES_KUBECONFORM: false
+          VALIDATE_SHELL_SHFMT: false
+          VALIDATE_CSS: false
+          VALIDATE_CSS_PRETTIER: false
+          VALIDATE_GITLEAKS: false
+          FIX_JAVASCRIPT_STANDARD: false
+          VALIDATE_JSCPD: false
+          VALIDATE_NATURAL_LANGUAGE: false
+          VALIDATE_MARKDOWN: false
+          VALIDATE_PYTHON_BLACK: false
+          VALIDATE_PYTHON_FLAKE8: false
+          VALIDATE_PYTHON_ISORT: false
+          VALIDATE_TERRAFORM_TFLINT: false
+          VALIDATE_GOOGLE_JAVA_FORMAT: false
+          VALIDATE_YAML: false
+          VALIDATE_YAML_PRETTIER: false
