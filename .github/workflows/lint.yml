@@ -28,15 +28,9 @@ jobs:
           pwd
           ls -l
           echo "root /"
-          mkdir /action
-          echo "/action/"
-          ls -l /action/
-          (cd /action;mkdir lib)
-          echo "/action/lib"
-          ls -l /action/lib/
-          (cd /action/lib;mkdir .automation)
-          echo "/action/lib/.automation"
-          ls -l /action/lib/.automation/
+          ld -l /
+          sudo mkdir -p /action/lib/.automation/
+          sudo chown -R runner:docker /action
           cp agile-organizer /action/lib/.automation/
 
       - name: Run Super-Linter
