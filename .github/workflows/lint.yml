@@ -60,7 +60,9 @@ jobs:
           VALIDATE_PYTHON_BLACK: false
           VALIDATE_PYTHON_FLAKE8: false
           VALIDATE_PYTHON_ISORT: false
+          VALIDATE_PYTHON_RUFF: false
           VALIDATE_TERRAFORM_TFLINT: false
+          VALIDATE_TERRAFORM_FMT: false
           VALIDATE_GOOGLE_JAVA_FORMAT: false
           VALIDATE_YAML: false
           VALIDATE_YAML_PRETTIER: false
@@ -69,3 +71,6 @@ jobs:
           VALIDATE_BASH_EXEC: false
           VALIDATE_BASH: false
           VALIDATE_KUBEVAL: false
+          VALIDATE_CHECKOV: false
+          VALIDATE_PYTHON_PYLINT: false
+
