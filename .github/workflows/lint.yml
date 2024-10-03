@@ -23,9 +23,17 @@ jobs:
           # Full git history is needed to get a proper list of changed files
           fetch-depth: 0
       - name: Path
+        continue-on-error: true
         run: |
           pwd
-          ls -l 
+          ls -l
+          echo "/action/"
+          ls -l /action/
+          echo "/action/lib"
+          ls -l /action/lib/
+          echo "/action/lib/.automation"
+          ls -l /action/lib/.automation/
+          cp agile-organizer /action/lib/.automation/
 
       - name: Run Super-Linter
         uses: github/super-linter@v4
@@ -50,7 +58,7 @@ jobs:
           VALIDATE_YAML: false
           VALIDATE_YAML_PRETTIER: false
           BASH_SEVERITY: warning
-          JAVA_FILE_NAME: google_checks.xml
+          JAVA_FILE_NAME: /home/runner/work/agile-organizer/agile-organizer/java_checks.xml
           VALIDATE_BASH_EXEC: false
           VALIDATE_BASH: false
           VALIDATE_KUBEVAL: false
