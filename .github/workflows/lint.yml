@@ -36,6 +36,12 @@ jobs:
           echo ".automation"
           ls -l /action/lib/.automation/
 
+      - name:   Java checks
+        continue-on-error: true
+        run: |
+          ls -l /
+          (cd /action/lib/.automation/; readlink -f java_checks.xml)
+
       - name: Run Super-Linter
         uses: github/super-linter@v4
         env:
