@@ -33,6 +33,8 @@ jobs:
           echo "root /"
           ls -l /
           cp java_checks.xml /action/lib/.automation/
+          echo ".automation"
+          ls -l /action/lib/.automation/
 
       - name: Run Super-Linter
         uses: github/super-linter@v4
