@@ -17,21 +17,23 @@ jobs:
     name: Lint code base
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          # Full git history is needed to get a proper list of changed files
-          fetch-depth: 0
       - name: Path
         continue-on-error: true
         run: |
           pwd
           ls -l
           echo "root /"
-          ld -l /
+          ls -l /
           sudo mkdir -p /action/lib/.automation/
           sudo chown -R runner:docker /action
+
           cp agile-organizer /action/lib/.automation/
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          # Full git history is needed to get a proper list of changed files
+          fetch-depth: 0
 
       - name: Run Super-Linter
         uses: github/super-linter@v4
