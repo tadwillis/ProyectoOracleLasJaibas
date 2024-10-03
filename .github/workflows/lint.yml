@@ -27,16 +27,22 @@ jobs:
         run: |
           pwd
           ls -l
+          echo "root /"
+          mkdir /action
           echo "/action/"
           ls -l /action/
+          (cd /action;mkdir lib)
           echo "/action/lib"
           ls -l /action/lib/
+          (cd /action/lib;mkdir .automation)
           echo "/action/lib/.automation"
           ls -l /action/lib/.automation/
           cp agile-organizer /action/lib/.automation/
 
       - name: Run Super-Linter
         uses: github/super-linter@v4
+        run:
+        ls -l /
         env:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
