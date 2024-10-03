@@ -26,14 +26,13 @@ jobs:
       - name: Path
         continue-on-error: true
         run: |
+          sudo mkdir -p /action/lib/.automation/
+          sudo chown -R runner:docker /action
           pwd
           ls -l
           echo "root /"
           ls -l /
-          sudo mkdir -p /action/lib/.automation/
-          sudo chown -R runner:docker /action
-          pwd
-          cp agile-organizer /action/lib/.automation/
+          cp java_checks.xml /action/lib/.automation/
 
       - name: Run Super-Linter
         uses: github/super-linter@v4
