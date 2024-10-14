@@ -1,14 +1,16 @@
 import unittest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.firefox import GeckoDriverManager
-
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.firefox.options import Options
 
 class GoogleTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.browser = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
+        options = Options()
+        options.headless = True
+        self.browser = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()) , options=options)
         self.addCleanup(self.browser.quit)
 
     def test_page_title(self):
