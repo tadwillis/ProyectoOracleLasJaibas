@@ -29,6 +29,7 @@ jobs:
           pip install -U selenium
           pip install -U pytest
           pip install -U pytest-html
+          pip install -U webdriver-manager
           pytest test1.py --html=report.html.
           cat report.html
 
