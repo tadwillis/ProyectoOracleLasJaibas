@@ -16,12 +16,21 @@ jobs:
   super-lint:
     name: Lint code base
     runs-on: ubuntu-latest
-    steps:
+    steps:       
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           # Full git history is needed to get a proper list of changed files
           fetch-depth: 0
+
+      - name: Selenium Test
+        continue-on-error: true
+        run: |
+          pip install -U selenium
+          pip install -U pytest
+          pip install -U pytest-html
+          pytest test1.py --html=report.html.
+          cat report.html
 
       - name: Path
         continue-on-error: true
