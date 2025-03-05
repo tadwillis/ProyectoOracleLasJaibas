@@ -45,7 +45,7 @@ public class UserController {
                 .headers(responseHeaders).build();
     }
     //@CrossOrigin
-    @PutMapping(value = "todolist/{id}")
+    @PutMapping(value = "updateUser/{id}")
     public ResponseEntity updateUser(@RequestBody User user, @PathVariable int id){
         try{
             User dbUser = UserService.updateUser(id, user);
