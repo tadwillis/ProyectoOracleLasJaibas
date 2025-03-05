@@ -1,6 +1,6 @@
 package com.springboot.MyTodoList.controller;
-import com.springboot.MyTodoList.model.ToDoItem;
-import com.springboot.MyTodoList.service.ToDoItemService;
+import com.springboot.MyTodoList.model.User;
+import com.springboot.MyTodoList.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,7 +27,7 @@ public class UserController {
     public ResponseEntity<User> getUserById(@PathVariable int id){
         try{
             ResponseEntity<User> responseEntity = userService.getUserById(id);
-            return new ResponseEntity<ToDoItem>(responseEntity.getBody(), HttpStatus.OK);
+            return new ResponseEntity<User>(responseEntity.getBody(), HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
