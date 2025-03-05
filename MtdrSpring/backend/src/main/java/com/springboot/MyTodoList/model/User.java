@@ -37,20 +37,20 @@ public class User {
         this.ID=ID;
     }
 
-    public int getNumber(){
+    public String getNumber(){
         return number;
     }
 
-    public void setNumber(int number){
+    public void setNumber(String number){
         this.number=number;
     }
 
     
-    public int getPassword(){
+    public String getPassword(){
         return password;
     }
 
-    public void setPassword(int password){
+    public void setPassword(String password){
         this.password=password;
     }
 

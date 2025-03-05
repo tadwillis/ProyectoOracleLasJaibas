@@ -21,7 +21,7 @@ public class UserService {
         return users;
     }
 
-    public ResponseEntity<User> getItemById(int id){
+    public ResponseEntity<User> getUserById(int id){
         Optional<User> userById = userRepository.findById(id);
         if (userById.isPresent()){
             return new ResponseEntity<>(userById.get(), HttpStatus.OK);
@@ -50,7 +50,7 @@ public class UserService {
             user.setID(id);
             user.setNumber(user2update.getNumber());
             user.setPassword(user2update.getPassword());
-            return user.save(user);
+            return userRepository.save(user);
         }else{
             return null;
         }

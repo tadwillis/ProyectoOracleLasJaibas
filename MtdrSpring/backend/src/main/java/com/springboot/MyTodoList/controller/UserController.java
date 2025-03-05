@@ -48,7 +48,7 @@ public class UserController {
     @PutMapping(value = "updateUser/{id}")
     public ResponseEntity updateUser(@RequestBody User user, @PathVariable int id){
         try{
-            User dbUser = UserService.updateUser(id, user);
+            User dbUser = userService.updateUser(id, user);
             
             return new ResponseEntity<>(dbUser,HttpStatus.OK);
         }catch (Exception e){
