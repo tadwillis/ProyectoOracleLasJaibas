@@ -31,7 +31,7 @@ public class UserService {
     }
 
 
-    public ToDoItem addUser(User newUser){
+    public User addUser(User newUser){
         return userRepository.save(newUser);
     }
 
@@ -50,7 +50,7 @@ public class UserService {
             user.setID(id);
             user.setNumber(user2update.getNumber());
             user.setPassword(user2update.getPassword());
-            return user.save(toDoItem);
+            return user.save(user);
         }else{
             return null;
         }
