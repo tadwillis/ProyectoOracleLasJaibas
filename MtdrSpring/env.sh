@@ -68,5 +68,7 @@ alias ingresssecret='kubectl get secrets --all-namespaces | grep istio-ingressga
 alias virtualservices='kubectl get virtualservices --all-namespaces'
 alias deployments='kubectl get deployments --all-namespaces'
 alias mtdrworkshop='echo deployments... ; deployments|grep mtdrworkshop ; echo pods... ; pods|grep mtdrworkshop ; echo services... ; services | grep mtdrworkshop ; echo secrets... ; secrets|grep mtdrworkshop ; echo "other shortcut commands... most can take partial podname as argument, such as [logpod front] or [deletepod order]...  pods  services secrets deployments " ; ls $MTDRWORKSHOP_LOCATION/utils/'
+alias sshpod1='kubectl exec -i -t $(kubectl get pod --namespace mtdrworkshop --selector='app=hud' --output jsonpath='{.items[0].metadata.name}') -n mtdrworkshop -- /bin/bash'
+
 
 export PATH=$PATH:$MTDRWORKSHOP_LOCATION/utils/
