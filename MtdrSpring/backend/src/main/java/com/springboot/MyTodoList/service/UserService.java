@@ -48,8 +48,8 @@ public class UserService {
         if(dbUser.isPresent()){
             User user = dbUser.get();
             user.setID(id);
-            user.setNumber(user2update.getNumber());
-            user.setPassword(user2update.getPassword());
+            user.setPhoneNumber(user2update.getPhoneNumber());
+            user.setUserPassword(user2update.getUserPassword());
             return userRepository.save(user);
         }else{
             return null;
