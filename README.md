@@ -6,3 +6,4 @@ Pablo Velazquez Bremont - A01734635
 Francisco Vaquera Saavedra - A01234377
 Tadeo Andrés Willis Lozano - A00829341
 
+![Diagrama ER](./assets/ER.jpeg)
