@@ -1,6 +1,6 @@
 # Ruta relativa a la carpeta wallet
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$walletPath = Join-Path $ScriptDir "wallet"
+$walletPath = Join-Path $ScriptDir "/../wallet"
 $namespace = "mtdrworkshop"
 $secretName = "db-wallet-secret"
 
