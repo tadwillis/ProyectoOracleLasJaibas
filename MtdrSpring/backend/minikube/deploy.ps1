@@ -31,9 +31,7 @@ Write-Host "`nServicios disponibles:" -ForegroundColor Green
 kubectl get svc | Select-String "todolistapp"
 
 # Acceder al servicio en navegador si se usa NodePort
-$nodePort = kubectl get svc todolistapp-springboot-service -o=jsonpath="{.spec.ports[0].nodePort}"
-$minikubeIP = minikube ip
-$serviceURL = "http://$minikubeIP`:$nodePort"
+minikube service todolistapp-springboot-service -n mtdrworkshop
 
 Write-Host "`nAccede a tu app en: $serviceURL" -ForegroundColor Cyan
 Start-Process $serviceURL
