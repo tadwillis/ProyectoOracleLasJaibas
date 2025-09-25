@@ -1,7 +1,7 @@
 package com.springboot.MyTodoList.model;
 
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
 /*
@@ -24,7 +24,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int ID;
 
-    @Column(name = "NUMBER")
+    @Column(name = "PHONENUMBER")
     String phonenumber;
 
     @Column(name = "PASSWORD")

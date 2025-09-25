@@ -35,6 +35,12 @@ public class UserService {
         return userRepository.save(newUser);
     }
 
+    public User test(){
+        User newUser = new User(88,"someNumber","pwd");
+
+        return userRepository.save(newUser);
+    }
+
     public boolean deleteUser(int id){
         try{
             userRepository.deleteById(id);

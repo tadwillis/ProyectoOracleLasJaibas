@@ -49,7 +49,7 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: db_user
-              value: "TODOUSER"
+              value: "AORUIZ"
             - name: db_url
               value: "jdbc:oracle:thin:@aoruizatp_tp?TNS_ADMIN=/mtdrworkshop/creds"
             - name: todo.table.name

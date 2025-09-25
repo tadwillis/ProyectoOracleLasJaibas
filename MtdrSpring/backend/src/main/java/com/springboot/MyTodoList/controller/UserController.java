@@ -68,5 +68,10 @@ public class UserController {
     }
 
 
+    @GetMapping(value = "/unitTestAdd")
+    public User test(){
+        return userService.test();
+    }
+
 
 }
