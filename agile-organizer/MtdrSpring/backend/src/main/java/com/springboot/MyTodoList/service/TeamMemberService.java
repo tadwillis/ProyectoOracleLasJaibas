@@ -7,12 +7,15 @@ import com.springboot.MyTodoList.model.TeamMemberDTO;
 import com.springboot.MyTodoList.repository.TeamMemberRepository;
 import com.springboot.MyTodoList.repository.TeamRepository;
 import com.springboot.MyTodoList.repository.AppUserRepository;
+
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+
 
 @Service
 public class TeamMemberService {
@@ -21,20 +24,25 @@ public class TeamMemberService {
     private final TeamRepository teamRepo;
     private final AppUserRepository userRepo;
 
-    public TeamMemberService(TeamMemberRepository repo, TeamRepository teamRepo, AppUserRepository userRepo) {
+    public TeamMemberService(TeamMemberRepository repo,
+                             TeamRepository teamRepo,
+                             AppUserRepository userRepo) {
         this.repo = repo;
         this.teamRepo = teamRepo;
         this.userRepo = userRepo;
     }
 
-    public List<TeamMemberDTO> findAll() {
-        return repo.findAll().stream().map(this::toDTO).collect(Collectors.toList());
+ 
+    public Page<TeamMemberDTO> findAll(Pageable pageable) {
+        return repo.findAll(pageable).map(this::toDTO);
     }
 
+  
     public Optional<TeamMemberDTO> findById(Long id) {
         return repo.findById(id).map(this::toDTO);
     }
 
+    
     public TeamMemberDTO create(TeamMemberDTO dto) {
         Team team = teamRepo.findById(dto.getTeamId())
                 .orElseThrow(() -> new RuntimeException("Team not found"));
@@ -50,17 +58,34 @@ public class TeamMemberService {
         return toDTO(repo.save(member));
     }
 
-    public void delete(Long id) {
-        repo.deleteById(id);
+    
+    public TeamMemberDTO update(Long id, TeamMemberDTO dto) {
+        return repo.findById(id).map(existing -> {
+            existing.setRole(dto.getRole());
+            existing.setJoinedAt(dto.getJoinedAt());
+            
+            return toDTO(repo.save(existing));
+        }).orElse(null);
+    }
+
+    public boolean delete(Long id) {
+        if (repo.existsById(id)) {
+            repo.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     private TeamMemberDTO toDTO(TeamMember member) {
-        TeamMemberDTO dto = new TeamMemberDTO();
-        dto.setTeamMemberId(member.getTeamMemberId());
-        dto.setTeamId(member.getTeam().getTeamId());
-        dto.setUserId(member.getUser().getUserId());
-        dto.setRole(member.getRole());
-        dto.setJoinedAt(member.getJoinedAt());
-        return dto;
+    TeamMemberDTO dto = new TeamMemberDTO();
+    dto.setTeamMemberId(member.getTeamMemberId());
+    dto.setTeamId(Long.valueOf(member.getTeam().getTeamId()));
+    dto.setUserId(Long.valueOf(member.getUser ().getUserId()));
+    dto.setRole(member.getRole());
+    dto.setJoinedAt(member.getJoinedAt());
+    return dto;
     }
+
+
 }
+
