@@ -7,8 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -34,7 +32,7 @@ public class UserController {
     }
     //@CrossOrigin
     @PostMapping(value = "/adduser")
-    public ResponseEntity addUser(@RequestBody User newUser) throws Exception{
+    public ResponseEntity<User> addUser(@RequestBody User newUser) throws Exception{
         User dbUser = userService.addUser(newUser);
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.set("location",""+dbUser.getID());
@@ -46,7 +44,7 @@ public class UserController {
     }
     //@CrossOrigin
     @PutMapping(value = "updateUser/{id}")
-    public ResponseEntity updateUser(@RequestBody User user, @PathVariable int id){
+    public ResponseEntity<User> updateUser(@RequestBody User user, @PathVariable int id){
         try{
             User dbUser = userService.updateUser(id, user);
             

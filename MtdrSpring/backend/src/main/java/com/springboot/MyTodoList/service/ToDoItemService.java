@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,17 @@ public class ToDoItemService {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
+    public ToDoItem getToDoItemById(int id){
+        Optional<ToDoItem> todoData = toDoItemRepository.findById(id);
+        if (todoData.isPresent()){
+            return todoData.get();
+        }else{
+            return null;
+        }
+    }
+
+    
     public ToDoItem addToDoItem(ToDoItem toDoItem){
         return toDoItemRepository.save(toDoItem);
     }
@@ -52,5 +64,6 @@ public class ToDoItemService {
             return null;
         }
     }
+    
 
 }

@@ -2,7 +2,6 @@ package com.springboot.MyTodoList.model;
 
 
 import jakarta.persistence.*;
-import java.time.OffsetDateTime;
 
 /*
     representation of the USER table that exists already

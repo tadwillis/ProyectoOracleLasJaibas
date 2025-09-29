@@ -7,8 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -32,7 +30,7 @@ public class ToDoItemController {
     }
     //@CrossOrigin
     @PostMapping(value = "/todolist")
-    public ResponseEntity addToDoItem(@RequestBody ToDoItem todoItem) throws Exception{
+    public ResponseEntity<ToDoItem> addToDoItem(@RequestBody ToDoItem todoItem) throws Exception{
         ToDoItem td = toDoItemService.addToDoItem(todoItem);
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.set("location",""+td.getID());
@@ -44,7 +42,7 @@ public class ToDoItemController {
     }
     //@CrossOrigin
     @PutMapping(value = "todolist/{id}")
-    public ResponseEntity updateToDoItem(@RequestBody ToDoItem toDoItem, @PathVariable int id){
+    public ResponseEntity<ToDoItem> updateToDoItem(@RequestBody ToDoItem toDoItem, @PathVariable int id){
         try{
             ToDoItem toDoItem1 = toDoItemService.updateToDoItem(id, toDoItem);
             System.out.println(toDoItem1.toString());

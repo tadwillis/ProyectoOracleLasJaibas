@@ -17,7 +17,7 @@
 		<java.version>11</java.version>
 		<version.lib.ojdbc>21.1.0.0</version.lib.ojdbc>
 		<frontend-src-dir>${project.basedir}/src/main/frontend</frontend-src-dir>
-		<node.version>v16.13.2</node.version>
+		<node.version>v23.9.0</node.version>
 		<npm.version>8.1.2</npm.version>
 	</properties>
 	<dependencies>
@@ -75,10 +75,15 @@
 		</dependency>
 		<dependency>
 			<groupId>org.telegram</groupId>
-			<artifactId>telegrambots</artifactId>
-			<version>6.5.0</version>
-		</dependency>		
-	</dependencies>
+			<artifactId>telegrambots-springboot-longpolling-starter</artifactId>
+			<version>9.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.telegram</groupId>
+			<artifactId>telegrambots-client</artifactId>
+			<version>9.1.0</version>
+		</dependency>
+ </dependencies>
 	<build>
 		<plugins>
 			<!-- Keeps frontend and backend separate. -->
