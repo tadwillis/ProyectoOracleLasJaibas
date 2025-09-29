@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import java.time.OffsetDateTime;
+
 public class BotActions{
 
     private static final Logger logger = LoggerFactory.getLogger(BotActions.class);
@@ -73,6 +75,7 @@ public class BotActions{
             .keyboardRow(new KeyboardRow(BotLabels.SHOW_MAIN_SCREEN.getLabel(),BotLabels.HIDE_MAIN_SCREEN.getLabel()))
             .build()
         );
+        exit = true;
     }
 
     public void fnDone() {
@@ -92,6 +95,7 @@ public class BotActions{
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
         }
+        exit = true;
     }
 
     public void fnUndo() {
@@ -112,6 +116,7 @@ public class BotActions{
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
         }
+        exit = true;
     }
 
     public void fnDelete(){
@@ -129,6 +134,7 @@ public class BotActions{
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
         }
+        exit = true;
     }
 
     public void fnHide(){
@@ -137,6 +143,7 @@ public class BotActions{
 			BotHelper.sendMessageToTelegram(chatId, BotMessages.BYE.getMessage(), telegramClient);
         else
             return;
+        exit = true;
     }
 
     public void fnListAll(){
@@ -197,6 +204,7 @@ public class BotActions{
 
         //
         BotHelper.sendMessageToTelegram(chatId, BotLabels.MY_TODO_LIST.getLabel(), telegramClient,  keyboardMarkup);//
+        exit = true;
     }
 
     public void fnAddItem(){
@@ -206,7 +214,19 @@ public class BotActions{
             return;
         logger.info("Adding item by BotHelper");
         BotHelper.sendMessageToTelegram(chatId, BotMessages.TYPE_NEW_TODO_ITEM.getMessage(), telegramClient);
-    
+        exit = true;
+    }
+
+    public void fnElse(){
+        if(exit)
+            return;
+        ToDoItem newItem = new ToDoItem();
+        newItem.setDescription(requestText);
+        newItem.setCreation_ts(OffsetDateTime.now());
+        newItem.setDone(false);
+        todoService.addToDoItem(newItem);
+
+        BotHelper.sendMessageToTelegram(chatId, BotMessages.NEW_ITEM_ADDED.getMessage(), telegramClient, null);
     }
 
 }

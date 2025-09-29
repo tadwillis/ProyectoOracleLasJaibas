@@ -1,6 +1,5 @@
 package com.springboot.MyTodoList.controller;
 
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -102,15 +101,9 @@ public class ToDoItemBotController  implements SpringLongPollingBot, LongPolling
 		actions.fnHide();
 		actions.fnListAll();
 		actions.fnAddItem();
+		actions.fnElse();
 
 	}
-
-	// GET /todolist
-	public List<ToDoItem> getAllToDoItems() { 
-		return toDoItemService.findAll();
-	}
-
-
 
 	@AfterBotRegistration
     public void afterRegistration(BotSession botSession) {
