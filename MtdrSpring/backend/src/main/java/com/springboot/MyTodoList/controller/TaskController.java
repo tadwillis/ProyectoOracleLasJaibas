@@ -1,7 +1,7 @@
-package com.tuapp.projectmanagement.controller;
+package com.springboot.MyTodoList.controller;
 
-import com.tuapp.projectmanagement.model.*;
-import com.tuapp.projectmanagement.service.*;
+import com.springboot.MyTodoList.model.Task;
+import com.springboot.MyTodoList.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,7 +53,7 @@ public class TaskController {
     }
     
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Task>> getTasksByUser(@PathVariable Long userId) {
+    public ResponseEntity<List<Task>> getTasksByAssignedUser(@PathVariable Long userId) {
         return ResponseEntity.ok(taskService.getTasksByAssignedUser(userId));
     }
     
@@ -62,11 +62,6 @@ public class TaskController {
             @PathVariable Long userId,
             @PathVariable String status) {
         return ResponseEntity.ok(taskService.getTasksByUserAndStatus(userId, status));
-    }
-    
-    @GetMapping("/search")
-    public ResponseEntity<List<Task>> searchTasks(@RequestParam String keyword) {
-        return ResponseEntity.ok(taskService.searchTasksByTitle(keyword));
     }
     
     @PutMapping("/{id}")
@@ -91,18 +86,6 @@ public class TaskController {
         }
     }
     
-    @PatchMapping("/{id}/sprint")
-    public ResponseEntity<Task> assignTaskToSprint(
-            @PathVariable Long id,
-            @RequestParam Long sprintId) {
-        try {
-            Task updated = taskService.assignTaskToSprint(id, sprintId);
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    
     @PatchMapping("/{id}/status")
     public ResponseEntity<Task> updateTaskStatus(
             @PathVariable Long id,
@@ -113,12 +96,6 @@ public class TaskController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
-    }
-    
-    @GetMapping("/sprint/{sprintId}/progress")
-    public ResponseEntity<Double> getSprintProgress(@PathVariable Long sprintId) {
-        Double progress = taskService.getSprintProgress(sprintId);
-        return ResponseEntity.ok(progress);
     }
     
     @DeleteMapping("/{id}")

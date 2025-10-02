@@ -1,15 +1,19 @@
-package com.tuapp.projectmanagement.service;
+package com.springboot.MyTodoList.service;
 
-import com.tuapp.projectmanagement.model.*;
-import com.tuapp.projectmanagement.repository.*;
+import com.springboot.MyTodoList.model.AppUser;
+import com.springboot.MyTodoList.model.Task;
+import com.springboot.MyTodoList.model.Team;
+import com.springboot.MyTodoList.model.UserStory;
+import com.springboot.MyTodoList.repository.AppUserRepository;
+import com.springboot.MyTodoList.repository.TaskRepository;
+import com.springboot.MyTodoList.repository.TeamRepository;
+import com.springboot.MyTodoList.repository.UserStoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +22,6 @@ public class TaskService {
     
     private final TaskRepository taskRepository;
     private final UserStoryRepository storyRepository;
-    private final SprintRepository sprintRepository;
     private final TeamRepository teamRepository;
     private final AppUserRepository userRepository;
     
@@ -79,45 +82,4 @@ public class TaskService {
     
     public Task assignTask(Long taskId, Long userId) {
         Task task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new RuntimeException("Task not found"));
-        AppUser user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        task.setAssignedUser(user);
-        return taskRepository.save(task);
-    }
-    
-    public Task assignTaskToSprint(Long taskId, Long sprintId) {
-        Task task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new RuntimeException("Task not found"));
-        Sprint sprint = sprintRepository.findById(sprintId)
-            .orElseThrow(() -> new RuntimeException("Sprint not found"));
-        
-        task.setSprint(sprint);
-        return taskRepository.save(task);
-    }
-    
-    public Task updateTaskStatus(Long id, String newStatus) {
-        Task task = taskRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Task not found"));
-        
-        task.setStatus(newStatus);
-        return taskRepository.save(task);
-    }
-    
-    public void deleteTask(Long id) {
-        taskRepository.deleteById(id);
-    }
-    
-    public List<Task> searchTasksByTitle(String keyword) {
-        return taskRepository.searchByTitle(keyword);
-    }
-    
-    public Double getSprintProgress(Long sprintId) {
-        Long total = taskRepository.countTotalTasksBySprintId(sprintId);
-        if (total == 0) return 0.0;
-        
-        Long completed = taskRepository.countCompletedTasksBySprintId(sprintId);
-        return (completed * 100.0) / total;
-    }
-}
+            .orElseThr

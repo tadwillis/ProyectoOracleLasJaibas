@@ -1,15 +1,17 @@
-package com.tuapp.projectmanagement.service;
+package com.springboot.MyTodoList.service;
 
-import com.tuapp.projectmanagement.model.*;
-import com.tuapp.projectmanagement.repository.*;
+import com.springboot.MyTodoList.model.AppUser;
+import com.springboot.MyTodoList.model.Project;
+import com.springboot.MyTodoList.model.Sprint;
+import com.springboot.MyTodoList.repository.AppUserRepository;
+import com.springboot.MyTodoList.repository.ProjectRepository;
+import com.springboot.MyTodoList.repository.SprintRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
 
 @Service
 @RequiredArgsConstructor

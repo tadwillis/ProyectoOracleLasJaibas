@@ -1,7 +1,7 @@
-package com.tuapp.projectmanagement.controller;
+package com.springboot.MyTodoList.controller;
 
-import com.tuapp.projectmanagement.model.*;
-import com.tuapp.projectmanagement.service.*;
+import com.springboot.MyTodoList.model.UserStory;
+import com.springboot.MyTodoList.service.UserStoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
