@@ -1,4 +1,4 @@
-package com.springboot.MyTodoList.repository;
+package com.springboot.MyTodoList.model;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -20,13 +20,13 @@ public class UserStory {
     @Column(nullable = false, length = 200)
     private String title;
     
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "CLOB")
     private String description;
     
     @Column(name = "story_points")
     private Integer storyPoints;
     
-    @Column(name = "estimated_hours")
+    @Column(name = "estimated_hours", columnDefinition = "NUMBER(10,2)")
     private Double estimatedHours;
     
     @Column(nullable = false)

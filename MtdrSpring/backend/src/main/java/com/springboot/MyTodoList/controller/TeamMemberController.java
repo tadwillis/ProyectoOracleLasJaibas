@@ -24,7 +24,7 @@ public class TeamMemberController {
         try {
             TeamMember member = teamMemberService.addMemberToTeam(teamId, userId, role);
             return ResponseEntity.status(HttpStatus.CREATED).body(member);
-        } catch (IllegalArgumentException | RuntimeException e) {
+        }  catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
     }

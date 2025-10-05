@@ -1,4 +1,4 @@
-package com.springboot.MyTodoList.repository;
+package com.springboot.MyTodoList.model;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -20,7 +20,7 @@ public class Project {
     @Column(nullable = false, length = 100)
     private String name;
     
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "CLOB")
     private String description;
     
     @ManyToOne

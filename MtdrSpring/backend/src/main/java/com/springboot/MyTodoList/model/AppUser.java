@@ -1,4 +1,4 @@
-package com.springboot.MyTodoList.repository;
+package com.springboot.MyTodoList.model;
 
 import jakarta.persistence.*;
 import lombok.*;

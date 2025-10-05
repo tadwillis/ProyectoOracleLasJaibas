@@ -82,4 +82,23 @@ public class TaskService {
     
     public Task assignTask(Long taskId, Long userId) {
         Task task = taskRepository.findById(taskId)
-            .orElseThr
+            .orElseThrow(() -> new RuntimeException("Task not found"));
+        AppUser user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        task.setAssignedUser(user);
+        return taskRepository.save(task);
+    }
+    
+    public Task updateTaskStatus(Long id, String newStatus) {
+        Task task = taskRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Task not found"));
+        
+        task.setStatus(newStatus);
+        return taskRepository.save(task);
+    }
+    
+    public void deleteTask(Long id) {
+        taskRepository.deleteById(id);
+    }
+}

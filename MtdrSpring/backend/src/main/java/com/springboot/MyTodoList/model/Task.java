@@ -1,4 +1,4 @@
-package com.springboot.MyTodoList.repository;
+package com.springboot.MyTodoList.model;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tasks")
+@Table(name = "task")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,13 +20,16 @@ public class Task {
     @Column(nullable = false, length = 200)
     private String title;
     
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "CLOB")
     private String description;
     
     @Column(nullable = false, length = 50)
     private String status = "todo";
     
-    @Column(name = "effort_hours")
+    @Column(name = "estimated_hours", columnDefinition = "NUMBER(10,2)")
+    private Double estimatedHours;
+    
+    @Column(name = "effort_hours", columnDefinition = "NUMBER(10,2)")
     private Double effortHours;
     
     @Column(nullable = false)
