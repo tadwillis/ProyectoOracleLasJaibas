@@ -1,22 +1,21 @@
+// TaskList.js
 import React, { useState, useEffect } from 'react';
 import NewItem from '../NewItem';
 import API_LIST from '../API';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
-  Button,
-  Paper,
-  CircularProgress,
-  Typography,
-  Box,
-  Grid,
-  Stack
+  Button, Paper, CircularProgress, Typography, Box, Grid, Stack
 } from '@mui/material';
 import Moment from 'react-moment';
-import {
-  DragDropContext,
-  Droppable,
-  Draggable
-} from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+
+
+const normalizeStatus = (s) => {
+  if (!s) return 'todo';
+  const x = String(s).toLowerCase();
+  if (x === 'in_progress' || x === 'in-progress') return 'inprogress';
+  return x; // 'todo' | 'done' | 'cancelled' | 'inprogress'
+};
 
 function TaskList() {
   const [isLoading, setLoading] = useState(false);
@@ -24,118 +23,118 @@ function TaskList() {
   const [items, setItems] = useState([]);
   const [error, setError] = useState();
 
-  // === CRUD ===
-  function deleteItem(deleteId) {
-    fetch(API_LIST + "/" + deleteId, { method: 'DELETE' })
-      .then(response => {
-        if (response.ok) {
-          const remainingItems = items.filter(item => item.id !== deleteId);
-          setItems(remainingItems);
-        } else {
-          throw new Error('Error deleting item');
-        }
-      })
-      .catch(err => setError(err));
-  }
+  const STORY_ID = 1;
+  const TEAM_ID  = 1;
 
-  function updateStatus(id, description, status) {
-    fetch(API_LIST + "/" + id, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ description, status })
-    })
-      .then(response => {
-        if (!response.ok) throw new Error('Error updating item');
-        return response.json();
-      })
-      .then(() => {
-        const updated = items.map(x =>
-          x.id === id ? { ...x, description, status } : x
-        );
-        setItems(updated);
-      })
-      .catch(err => setError(err));
-  }
+  useEffect(() => { loadTasks(); }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(API_LIST)
-      .then(response => {
-        if (response.ok) return response.json();
-        throw new Error('Error fetching list');
-      })
-      .then(result => {
-        setItems(result);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err);
-        setLoading(false);
+  async function loadTasks() {
+    setLoading(true); setError(undefined);
+    try {
+      let res = await fetch(`${API_LIST}/story/${STORY_ID}`, {
+        cache: 'no-store', credentials: 'same-origin', headers: { 'Accept': 'application/json' }
       });
-  }, []);
-
-  function addItem(text) {
-    setInserting(true);
-    fetch(API_LIST, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ description: text, status: "todo" })
-    })
-      .then(response => {
-        if (!response.ok) throw new Error('Error adding item');
-        return response;
-      })
-      .then(result => {
-        const id = result.headers.get('location');
-        const newItem = { id, description: text, status: "todo", createdAt: new Date() };
-        setItems([newItem, ...items]);
-        setInserting(false);
-      })
-      .catch(err => {
-        setError(err);
-        setInserting(false);
-      });
-  }
-
-  // === Drag & Drop handler ===
-  const onDragEnd = (result) => {
-    if (!result.destination) return;
-
-    const { draggableId, destination } = result;
-    const taskId = draggableId;
-    const newStatus = destination.droppableId;
-
-    const draggedTask = items.find(i => i.id === taskId);
-    if (draggedTask && draggedTask.status !== newStatus) {
-      updateStatus(draggedTask.id, draggedTask.description, newStatus);
+      if (!res.ok) {
+        const t = await res.text().catch(()=>'');
+        throw new Error(`Error al obtener tareas (HTTP ${res.status}) ${t}`);
+      }
+      const data = await res.json();
+      setItems((Array.isArray(data)?data:[]).map(t => ({ ...t, status: normalizeStatus(t.status) })));
+    } catch (e) {
+      console.error(e); setError(e);
+    } finally {
+      setLoading(false);
     }
-  };
+  }
+
+  // Crear tarea -> siempre con status 'todo' (columna "To Do")
+  async function addItem(description) {
+    if (!description.trim()) return;
+    setInserting(true); setError(undefined);
+    const body = {
+      title: description,            
+      description: description || '',
+      status: 'todo',               
+      priority: 0
+    };
+    try {
+      const res = await fetch(`${API_LIST}?storyId=${STORY_ID}&teamId=${TEAM_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const t = await res.text().catch(()=> '');
+        throw new Error(`Error al crear la tarea (HTTP ${res.status}) ${t}`);
+      }
+      // Recarga desde el back para evitar inconsistencias
+      await loadTasks();
+    } catch (e) {
+      console.error(e); setError(e);
+    } finally {
+      setInserting(false);
+    }
+  }
+
+  // Eliminar
+  async function deleteItem(id) {
+    setError(undefined);
+    try {
+      const res = await fetch(`${API_LIST}/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+      if (!res.ok) throw new Error('Error al eliminar tarea');
+      await loadTasks();
+    } catch (e) { setError(e); }
+  }
+
+  // Actualizar estado usando PATCH /{id}/status?status=...
+  async function updateStatus(id, _description, newStatus) {
+    setError(undefined);
+    try {
+      const res = await fetch(`${API_LIST}/${id}/status?status=${encodeURIComponent(newStatus)}`, {
+        method: 'PATCH', headers: { 'Accept':'application/json' }, credentials: 'same-origin'
+      });
+      if (!res.ok) throw new Error('Error al actualizar estado');
+      await loadTasks();
+    } catch (e) { setError(e); }
+  }
+
+  // Drag & Drop
+  function onDragEnd(result) {
+    if (!result.destination) return;
+    const { source, destination } = result;
+    if (source.droppableId === destination.droppableId) return;
+
+    const draggedColumn = source.droppableId;
+    const targetColumn = destination.droppableId;
+    const filtered = items.filter(i => i.status === draggedColumn);
+    const draggedItem = filtered[source.index];
+    if (draggedItem) updateStatus(draggedItem.id, draggedItem.description || draggedItem.title, targetColumn);
+  }
 
   const columns = [
-    { key: "todo", label: "To Do" },
+    { key: "todo",       label: "To Do" },
     { key: "inprogress", label: "In Progress" },
-    { key: "done", label: "Done" },
-    { key: "cancelled", label: "Cancelled" }
+    { key: "done",       label: "Done" },
+    { key: "cancelled",  label: "Cancelled" }
   ];
 
   return (
     <Box sx={{ maxWidth: "1400px", margin: "2rem auto", p: 3 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3}}>
-        <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-          Tareas
-        </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: "bold" }}>Tablero de Tareas</Typography>
         <NewItem addItem={addItem} isInserting={isInserting} />
       </Box>
 
       {error && <Typography color="error">Error: {error.message}</Typography>}
-      {isLoading && <CircularProgress sx={{ display: "block", margin: "2rem auto" }} />}
+      {isLoading && <CircularProgress sx={{ display: 'block', m: '2rem auto' }} />}
 
       {!isLoading && (
         <DragDropContext onDragEnd={onDragEnd}>
           <Grid container spacing={2}>
             {columns.map(col => (
               <Grid item xs={12} md={3} key={col.key}>
-                <Typography variant="h6" align="center" sx={{ mb: 2, fontWeight: "bold" }}>
+                <Typography variant="h6" align="center" sx={{ mb: 2, fontWeight: 'bold' }}>
                   {col.label}
                 </Typography>
                 <Droppable droppableId={col.key}>
@@ -144,46 +143,44 @@ function TaskList() {
                       {...provided.droppableProps}
                       ref={provided.innerRef}
                       spacing={2}
-                      sx={{
-                        minHeight: "400px",
-                        maxHeight: "600px",
-                        overflowY: "auto",
-                        backgroundColor: "#f9f9f9",
-                        p: 1,
-                        borderRadius: 2
-                      }}
+                      sx={{ minHeight: 400, maxHeight: '70vh', overflowY: 'auto', backgroundColor: '#f9f9f9', p: 2, borderRadius: 2 }}
                     >
-                      {items.filter(i => i.status === col.key).map((item, index) => (
-                        <Draggable key={item.id} draggableId={item.id} index={index}>
-                          {(provided) => (
-                            <Paper
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              elevation={3}
-                              sx={{ p: 2, borderRadius: 2 }}
-                            >
-                              <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                                {item.description}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                Creado: <Moment format="MMM Do, YYYY">{item.createdAt}</Moment>
-                              </Typography>
-                              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2 }}>
-                                <Button
-                                  startIcon={<DeleteIcon />}
-                                  variant="outlined"
-                                  size="small"
-                                  color="error"
-                                  onClick={() => deleteItem(item.id)}
-                                >
-                                  Delete
-                                </Button>
-                              </Box>
-                            </Paper>
-                          )}
-                        </Draggable>
-                      ))}
+                      {items
+                        .filter(i => i.status === col.key)
+                        .map((item, index) => (
+                          <Draggable key={String(item.id)} draggableId={String(item.id)} index={index}>
+                            {(provided) => (
+                              <Paper
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                elevation={3}
+                                sx={{ p: 2, borderRadius: 2 }}
+                              >
+                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                                  {item.title || item.description}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  Creado:{' '}
+                                  <Moment format="MMM Do, YYYY">
+                                    {item.createdAt}
+                                  </Moment>
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+                                  <Button
+                                    startIcon={<DeleteIcon />}
+                                    variant="outlined"
+                                    size="small"
+                                    color="error"
+                                    onClick={() => deleteItem(item.id)}
+                                  >
+                                    Eliminar
+                                  </Button>
+                                </Box>
+                              </Paper>
+                            )}
+                          </Draggable>
+                        ))}
                       {provided.placeholder}
                     </Stack>
                   )}
