@@ -3,6 +3,7 @@ package com.springboot.MyTodoList.service;
 import com.springboot.MyTodoList.model.AppUser;
 import com.springboot.MyTodoList.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import java.util.Optional;
 public class AppUserService {
     
     private final AppUserRepository userRepository;
+    private final PasswordEncoder passwordEncoder; // <-- AGREGAR
     
     public AppUser createUser(AppUser user) {
         if (userRepository.existsByUsername(user.getUsername())) {
@@ -24,6 +26,10 @@ public class AppUserService {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
+        
+        // Encriptar password antes de guardar
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        
         return userRepository.save(user);
     }
     
@@ -55,6 +61,11 @@ public class AppUserService {
         user.setPhone(userDetails.getPhone());
         user.setStatus(userDetails.getStatus());
         
+        // Si se proporciona un nuevo password, encriptarlo
+        if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+        }
+        
         return userRepository.save(user);
     }
     
@@ -71,5 +82,10 @@ public class AppUserService {
     
     public List<AppUser> searchUsersByName(String name) {
         return userRepository.searchByFullName(name);
+    }
+    
+    // Método adicional para validar password
+    public boolean validatePassword(String rawPassword, String encodedPassword) {
+        return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 }
