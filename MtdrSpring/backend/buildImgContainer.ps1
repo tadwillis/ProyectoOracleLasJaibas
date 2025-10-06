@@ -1,12 +1,3 @@
-#!/bin/bash
-
-# Set Java 17 as the Java version for this build
-export JAVA_HOME=$(/usr/libexec/java_home -v 17)
-export PATH=$JAVA_HOME/bin:$PATH
-
-echo "Using Java version:"
-java -version
-
 docker stop agilecontainer
 docker rm -f agilecontainer
 docker rmi agileimage
