@@ -3,7 +3,6 @@ package com.springboot.MyTodoList.controller;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -15,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.context.annotation.PropertySource;
-
 import org.telegram.telegrambots.longpolling.starter.AfterBotRegistration;
 import org.telegram.telegrambots.longpolling.BotSession;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
@@ -27,13 +25,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
-
-
 import com.springboot.MyTodoList.model.ToDoItem;
 import com.springboot.MyTodoList.service.ToDoItemService;
+import com.springboot.MyTodoList.service.AppUserService;
 import com.springboot.MyTodoList.util.BotCommands;
 import com.springboot.MyTodoList.util.BotHelper;
 import com.springboot.MyTodoList.util.BotLabels;
@@ -42,74 +38,79 @@ import com.springboot.MyTodoList.util.BotActions;
 import com.springboot.MyTodoList.config.BotProps;
 
 @Component
-public class ToDoItemBotController  implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
+public class ToDoItemBotController implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
 
-	private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
-	private ToDoItemService toDoItemService;
-	private final TelegramClient telegramClient;
-	
-	private final BotProps botProps;
+    private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
 
-	@Value("${telegram.bot.token}")
-	private String telegramBotToken;
+    private ToDoItemService toDoItemService;
+    private AppUserService appUserService;
+    private final TelegramClient telegramClient;
+    private final BotProps botProps;
 
+    @Value("${telegram.bot.token}")
+    private String telegramBotToken;
 
-	@Override
+    @Override
     public String getBotToken() {
-		if(telegramBotToken != null && !telegramBotToken.trim().isEmpty()){
-        	return telegramBotToken;
-		}else{
-			return botProps.getToken();
-		}
+        if(telegramBotToken != null && !telegramBotToken.trim().isEmpty()){
+            return telegramBotToken;
+        }else{
+            return botProps.getToken();
+        }
     }
 
+    public ToDoItemBotController(BotProps bp, ToDoItemService tsvc, AppUserService ausvc) {
+        this.botProps = bp;
+        telegramClient = new OkHttpTelegramClient(getBotToken());
+        toDoItemService = tsvc;
+        appUserService = ausvc;
+    }
 
-	public ToDoItemBotController( BotProps bp, ToDoItemService tsvc) {
-		this.botProps = bp;
-		telegramClient = new OkHttpTelegramClient(getBotToken());
-		toDoItemService = tsvc;
-	}
-
-	@Override
+    @Override
     public LongPollingUpdateConsumer getUpdatesConsumer() {
         return this;
     }
 
-	@Override
-	public void consume(Update update) {
+    @Override
+    public void consume(Update update) {
+        if (!update.hasMessage() || !update.getMessage().hasText()) return;
 
-		if (!update.hasMessage() || !update.getMessage().hasText()) return;
+        String messageTextFromTelegram = update.getMessage().getText();
+        long chatId = update.getMessage().getChatId();
 
-		
+        BotActions actions = new BotActions(telegramClient, toDoItemService);
+        actions.setAppUserService(appUserService);
+        actions.setRequestText(messageTextFromTelegram);
+        actions.setChatId(chatId);
 
-		String messageTextFromTelegram = update.getMessage().getText();
-		long chatId = update.getMessage().getChatId();
+        if(actions.getTodoService() == null){
+            logger.info("todosvc error");
+            actions.setTodoService(toDoItemService);
+        }
 
-		BotActions actions =  new BotActions(telegramClient,toDoItemService);
-		actions.setRequestText(messageTextFromTelegram);
-		actions.setChatId(chatId);
-		if(actions.getTodoService()==null){
-			logger.info("todosvc error");
-			actions.setTodoService(toDoItemService);
-		}
+        actions.fnStart();
+        actions.fnDone();
+        actions.fnUndo();
+        actions.fnDelete();
+        actions.fnHide();
+        actions.fnListAll();
+        actions.fnAddItem();
+        
+        // Nuevas acciones para AppUser
+        actions.fnUsersList();
+        actions.fnUserBy();
+        actions.fnUsersByStatus();
+        actions.fnAddUser();
+        actions.fnDeleteUser();
+        actions.fnMe();
+        
+        actions.fnElse();
+    }
 
-
-		actions.fnStart();
-		actions.fnDone();
-		actions.fnUndo();
-		actions.fnDelete();
-		actions.fnHide();
-		actions.fnListAll();
-		actions.fnAddItem();
-		actions.fnElse();
-
-	}
-
-	@AfterBotRegistration
+    @AfterBotRegistration
     public void afterRegistration(BotSession botSession) {
         System.out.println("Registered bot running state is: " + botSession.isRunning());
     }
-
 }
 
 
