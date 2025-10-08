@@ -5,9 +5,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {
   Button, Paper, CircularProgress, Typography, Box, Grid, Stack,
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Chip
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Chip, IconButton
 } from '@mui/material';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import TopBar from '../components/TopBar';
 
 // ===================== Utilidades =====================
 const normalizeStatus = (s) => {
@@ -17,7 +18,7 @@ const normalizeStatus = (s) => {
   return x; // 'todo' | 'done' | 'cancelled' | 'inprogress'
 };
 
-const PRIORITY_MAP = { bajo: 0, medio: 1, alto: 2 };
+const PRIORITY_MAP   = { bajo: 0, medio: 1, alto: 2 };
 const PRIORITY_LABEL = (n) => ({0:'Bajo',1:'Medio',2:'Alto'}[Number(n)] ?? 'Bajo');
 const PRIORITY_COLOR = (n) => {
   const v = Number(n);
@@ -35,9 +36,22 @@ const normNum  = (s) => {
   return Number.isFinite(n) ? n : null;
 };
 
-// IDs por defecto para crear
+// IDs por defecto para crear (el back los pide como query params)
 const TEAM_ID_DEFAULT  = 1;
 const STORY_ID_DEFAULT = 1;
+
+// ======= Banner =======
+const BANNER_SRC = "/img/banner-top.png";
+const heroSx = {
+  position: 'relative',
+  left: '50%', right: '50%', ml: '-50vw', mr: '-50vw',
+  width: '100vw',
+  backgroundImage: `url(${BANNER_SRC})`,
+  backgroundRepeat: 'no-repeat',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  py: { xs: 3, sm: 4 }, // (padding vertical)
+};
 
 // ===================== Componente =====================
 function TaskList() {
@@ -61,7 +75,7 @@ function TaskList() {
   // Diálogo "Editar tarea"
   const [openEdit, setOpenEdit] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [editStatus, setEditStatus] = useState('todo'); 
+  const [editStatus, setEditStatus] = useState('todo');
   const [editForm, setEditForm] = useState({
     title: '',
     description: '',
@@ -84,7 +98,7 @@ function TaskList() {
         credentials: 'same-origin'
       });
       if (!res.ok) {
-        const t = await res.text().catch(()=>'');
+        const t = await res.text().catch(()=> '');
         throw new Error(`Error al obtener tareas (HTTP ${res.status}) ${t}`);
       }
       const data = await res.json();
@@ -100,12 +114,10 @@ function TaskList() {
     }
   }
 
-  // ---------- Crear ----------
+  // =========== Crear ==============
   const canSubmitCreate = () => form.title.trim() !== '';
-
   const openCreateDialog = () => setOpenCreate(true);
   const closeCreateDialog = () => setOpenCreate(false);
-
   const handleCreateChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -164,10 +176,10 @@ function TaskList() {
     }
   }
 
-  // ---------- Editar ----------
+  // =========== Editar =============
   const openEditDialog = (task) => {
     setEditId(task.id);
-    setEditStatus(task.status); 
+    setEditStatus(task.status);
     setEditForm({
       title: task.title || '',
       description: task.description || '',
@@ -182,12 +194,10 @@ function TaskList() {
   };
 
   const closeEditDialog = () => setOpenEdit(false);
-
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditForm(prev => ({ ...prev, [name]: value }));
   };
-
   const canSubmitEdit = () => editForm.title.trim() !== '';
 
   async function handleEdit(e) {
@@ -201,7 +211,7 @@ function TaskList() {
     const body = {
       title: editForm.title.trim(),
       description: editForm.description.trim(),
-      status: editStatus, 
+      status: editStatus,
       estimatedHours: normNum(editForm.estimatedHours),
       effortHours:   normNum(editForm.effortHours),
       priority: PRIORITY_MAP[editForm.priority] ?? 0,
@@ -227,7 +237,7 @@ function TaskList() {
     }
   }
 
-  // ---------- Eliminar ----------
+  // ============ Eliminar ==============
   async function deleteItem(id) {
     setError(undefined);
     try {
@@ -237,7 +247,7 @@ function TaskList() {
     } catch (e) { setError(e); }
   }
 
-  // ---------- Drag & Drop ----------
+  // ============ Drag & Drop ==============
   async function updateStatus(id, _description, newStatus) {
     setError(undefined);
     try {
@@ -272,139 +282,168 @@ function TaskList() {
 
   // ===================== UI =====================
   return (
-    <Box sx={{ maxWidth: 1680, mx: "auto", p: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>Tablero de Tareas</Typography>
-        <Button
-          variant="contained"
-          size="small"
-          onClick={openCreateDialog}
+    <>
+
+      <TopBar />
+
+      {/* imagen detrás del título */}
+      <Box sx={heroSx}>
+        <Box
           sx={{
-            bgcolor: '#f84600ff',            
-            '&:hover': { bgcolor: '#d6370fff' }
+            maxWidth: 1680,
+            mx: 'auto',
+            px: 2,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}
         >
-          Agregar tarea
-        </Button>
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.35)' }}
+          >
+            Tablero de Tareas
+          </Typography>
+
+          <Button
+            variant="contained"
+            size="small"
+            onClick={openCreateDialog}
+            sx={{
+              bgcolor: '#f84600ff',
+              '&:hover': { bgcolor: '#d6370fff' }
+            }}
+          >
+            Agregar tarea
+          </Button>
+        </Box>
       </Box>
 
-      {error && <Typography color="error" variant="body2">Error: {error.message}</Typography>}
-      {isLoading && <CircularProgress size={28} sx={{ display: 'block', my: 3, mx: 'auto' }} />}
+      {/* separador */}
+      <Box sx={{ mt: 3 }} />
 
-      {!isLoading && (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Grid container spacing={1.5}>
-            {columns.map(col => (
-              <Grid item xs={12} sm={6} md={3} key={col.key}>
-                <Typography
-                  variant="subtitle1"
-                  align="center"
-                  sx={{ mb: 1.2, fontWeight: 700, letterSpacing: 0.2 }}
-                >
-                  {col.label}
-                </Typography>
-                <Droppable droppableId={col.key}>
-                  {(provided) => (
-                    <Stack
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      spacing={1}
-                      sx={{
-                        minHeight: 300,
-                        maxHeight: '55vh',
-                        overflowY: 'auto',
-                        backgroundColor: '#fafafa',
-                        p: 1.25,
-                        borderRadius: 1.5,
-                        border: '1px solid #eee'
-                      }}
-                    >
-                      {items
-                        .filter(i => i.status === col.key)
-                        .map((item, index) => (
-                          <Draggable key={String(item.id)} draggableId={String(item.id)} index={index}>
-                            {(provided) => (
-                              <Paper
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                elevation={1}
-                                sx={{
-                                  p: 1,
-                                  borderRadius: 1.5,
-                                  border: '1px solid #ececec'
-                                }}
-                              >
-                                {/* Encabezado */}
-                                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
-                                  <Typography
-                                    variant="subtitle2"
-                                    sx={{ fontWeight: 700, lineHeight: 1.15 }}
-                                  >
-                                    {item.title}
-                                  </Typography>
-                                  <Chip
-                                    label={PRIORITY_LABEL(item.priority)}
-                                    color={PRIORITY_COLOR(item.priority)}
-                                    size="small"
-                                    variant="filled"
-                                  />
-                                </Stack>
+      {/* Contenedor principal del tablero */}
+      <Box sx={{ maxWidth: 1680, mx: "auto", p: 2 }}>
+        {error && <Typography color="error" variant="body2">Error: {error.message}</Typography>}
+        {isLoading && <CircularProgress size={28} sx={{ display: 'block', my: 3, mx: 'auto' }} />}
 
-                                {/* Descripción */}
-                                {item.description && (
-                                  <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>
-                                    {item.description}
-                                  </Typography>
-                                )}
+        {!isLoading && (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Grid container spacing={1.5}>
+              {columns.map(col => (
+                <Grid item xs={12} sm={6} md={3} key={col.key}>
+                  <Typography
+                    variant="subtitle1"
+                    align="center"
+                    sx={{ mb: 1.2, fontWeight: 700, letterSpacing: 0.2 }}
+                  >
+                    {col.label}
+                  </Typography>
+                  <Droppable droppableId={col.key}>
+                    {(provided) => (
+                      <Stack
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        spacing={1}
+                        sx={{
+                          minHeight: 300,
+                          maxHeight: '55vh',
+                          overflowY: 'auto',
+                          backgroundColor: '#fafafa',
+                          p: 1.25,
+                          borderRadius: 1.5,
+                          border: '1px solid #eee'
+                        }}
+                      >
+                        {items
+                          .filter(i => i.status === col.key)
+                          .map((item, index) => (
+                            <Draggable key={String(item.id)} draggableId={String(item.id)} index={index}>
+                              {(provided) => (
+                                <Paper
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  elevation={1}
+                                  sx={{
+                                    p: 1,
+                                    borderRadius: 1.5,
+                                    border: '1px solid #ececec'
+                                  }}
+                                >
+                                  {/* Encabezado */}
+                                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+                                    <Typography
+                                      variant="subtitle2"
+                                      sx={{ fontWeight: 700, lineHeight: 1.15 }}
+                                    >
+                                      {item.title}
+                                    </Typography>
+                                    <Chip
+                                      label={PRIORITY_LABEL(item.priority)}
+                                      color={PRIORITY_COLOR(item.priority)}
+                                      size="small"
+                                      variant="filled"
+                                    />
+                                  </Stack>
 
-                                {/* Detalles */}
-                                <Stack spacing={0.25}>
-                                  <Typography variant="caption"><b>Estimado:</b> {item.estimatedHours ?? '-'} h</Typography>
-                                  <Typography variant="caption"><b>Tiempo Esfuerzo:</b> {item.effortHours ?? '-'} h</Typography>
-                                  <Typography variant="caption"><b>Inicio:</b> {item.startDate ? String(item.startDate).slice(0,10) : '-'}</Typography>
-                                  <Typography variant="caption"><b>Fin:</b> {item.endDate ? String(item.endDate).slice(0,10) : '-'}</Typography>
-                                </Stack>
+                                  {/* Descripción */}
+                                  {item.description && (
+                                    <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>
+                                      {item.description}
+                                    </Typography>
+                                  )}
 
-                                {/* Acciones */}
-                                <Box sx={{ display: 'flex', gap: 0.75, mt: 1 }}>
-                                  <Button
-                                    startIcon={<EditIcon />}
-                                    variant="contained"
-                                    size="small"
-                                    onClick={() => openEditDialog(item)}
-                                    sx={{
-                                      bgcolor: '#313131',        
-                                      color: '#ffffffff',
-                                      '&:hover': { bgcolor: '#313131' },
-                                      px: 1.25, py: 0.4, minHeight: 0, lineHeight: 1.15, fontSize: 12
-                                    }}
-                                  >
-                                    Editar
-                                  </Button>
-                                  <Button
-                                    onClick={() => deleteItem(item.id)}
-                                    color="error"
-                                    variant="outlined"
-                                    size="small"
-                                    sx={{ minWidth: 32, height: 32, p: 0, display: 'grid', placeItems: 'center' }}
-                                  >
-                                    <DeleteIcon fontSize="small" />
-                                  </Button>
-                                </Box>
-                              </Paper>
-                            )}
-                          </Draggable>
-                        ))}
-                      {provided.placeholder}
-                    </Stack>
-                  )}
-                </Droppable>
-              </Grid>
-            ))}
-          </Grid>
-        </DragDropContext>
-      )}
+                                  {/* Detalles */}
+                                  <Stack spacing={0.25}>
+                                    <Typography variant="caption"><b>Estimado:</b> {item.estimatedHours ?? '-'} h</Typography>
+                                    <Typography variant="caption"><b>Tiempo Esfuerzo:</b> {item.effortHours ?? '-'} h</Typography>
+                                    <Typography variant="caption"><b>Inicio:</b> {item.startDate ? String(item.startDate).slice(0,10) : '-'}</Typography>
+                                    <Typography variant="caption"><b>Fin:</b> {item.endDate ? String(item.endDate).slice(0,10) : '-'}</Typography>
+                                  </Stack>
+
+                                  {/* Acciones */}
+                                  <Box sx={{ display: 'flex', gap: 0.75, mt: 1, alignItems: 'center' }}>
+                                    <Button
+                                      startIcon={<EditIcon />}
+                                      variant="contained"
+                                      size="small"
+                                      onClick={() => openEditDialog(item)}
+                                      sx={{
+                                        bgcolor: '#313131',        // gris resaltado
+                                        color: '#ffffff',
+                                        '&:hover': { bgcolor: '#313131' },
+                                        px: 1.25, py: 0.4, minHeight: 0, lineHeight: 1.15, fontSize: 12
+                                      }}
+                                    >
+                                      Editar
+                                    </Button>
+
+                                    {/* Solo ícono, centrado */}
+                                    <IconButton
+                                      aria-label="Eliminar"
+                                      color="error"
+                                      size="small"
+                                      onClick={() => deleteItem(item.id)}
+                                      sx={{ width: 32, height: 32 }}
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  </Box>
+                                </Paper>
+                              )}
+                            </Draggable>
+                          ))}
+                        {provided.placeholder}
+                      </Stack>
+                    )}
+                  </Droppable>
+                </Grid>
+              ))}
+            </Grid>
+          </DragDropContext>
+        )}
+      </Box>
 
       {/* Diálogo Agregar tarea */}
       <Dialog open={openCreate} onClose={closeCreateDialog} fullWidth maxWidth="sm" component="form" onSubmit={handleCreate}>
@@ -471,7 +510,7 @@ function TaskList() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </>
   );
 }
 
