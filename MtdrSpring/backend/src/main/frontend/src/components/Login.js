@@ -1,70 +1,140 @@
-import './Login.css';
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Box, Button, TextField, Typography, Link, Grid, Paper, Alert } from "@mui/material";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 function Login() {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [errors, setErrors] = useState({});
+  const [serverMessage, setServerMessage] = useState("");
 
-  function showRegister() {
-    document.getElementById("login-form").classList.add("hidden");
-    document.getElementById("register-form").classList.remove("hidden");
-  }
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" });
+  };
 
-  function showLogin() {
-    document.getElementById("register-form").classList.add("hidden");
-    document.getElementById("login-form").classList.remove("hidden");
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const newErrors = {};
+    if (!formData.username.trim()) newErrors.username = "Campo obligatorio";
+    if (!formData.password.trim()) newErrors.password = "Campo obligatorio";
+    if (Object.keys(newErrors).length > 0) return setErrors(newErrors);
+
+    try {
+      const response = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("token", data.token); // guardar el token JWT
+        localStorage.setItem("username", data.username);
+        setServerMessage("✅ Login exitoso, redirigiendo...");
+        setTimeout(() => navigate("/taskList"), 1500);
+      } else {
+        const errorData = await response.json();
+        setServerMessage(errorData.error || "❌ Credenciales incorrectas");
+      }
+    } catch (err) {
+      setServerMessage("⚠️ Error de conexión con el servidor");
+    }
+  };
 
   return (
-    <div className="container">
-      {/* Panel Izquierdo */}
-      <div className="left-panel">
-        <div className="logo">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/Oracle_logo.svg" alt="logo"/>
-          <h1>Java Bot</h1>
-        </div>
+    <Grid container component="main" sx={{ height: "100vh" }}>
+      <Grid item xs={12} sm={6} md={6} component={Paper} elevation={6} square
+        sx={{ p: 4, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        <Box display="flex" alignItems="center" mb={2}>
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/c/cb/Oracle_logo.svg"
+            alt="logo"
+            style={{ width: 50, marginRight: 10 }}
+          />
+          <Typography variant="h5" component="h1">Java Bot</Typography>
+        </Box>
 
-        {/* FORMULARIO LOGIN */}
-        <div id="login-form">
-          <h2>Iniciar sesión</h2>
-          <p>¿No tienes una cuenta? <a href="#" onClick={showRegister}>Crear cuenta</a></p>
-          <div className="form-group">
-            <input type="text" placeholder="Nombre de usuario o correo electrónico"/>
-          </div>
-          <div className="form-group">
-            <input type="password" placeholder="Contraseña"/>
-          </div>
-          <button className="btn" onClick={() => navigate("/taskList")}>Conectar</button>
-        </div>
+        <Typography variant="h4" gutterBottom>Iniciar sesión</Typography>
 
-        {/* FORMULARIO REGISTRO */}
-        <div id="register-form" className="hidden">
-          <h2>Crear cuenta</h2>
-          <div className="form-group">
-            <input type="text" placeholder="Nombre de usuario"/>
-          </div>
-          <div className="form-group">
-            <input type="email" placeholder="Correo electrónico"/>
-          </div>
-          <div className="form-group">
-            <input type="text" placeholder="Nombre y apellidos"/>
-          </div>
-          <div className="form-group">
-            <input type="password" placeholder="Mínimo 8 caracteres"/>
-          </div>
-          <div className="form-group">
-            <input type="tel" placeholder="Número de teléfono (mínimo 8 caracteres)"/>
-          </div>
-          <button className="btn" onClick={() => navigate("/taskList")}>Conectar</button>
-          <p>¿Ya tienes una cuenta? <a href="#" onClick={showLogin}>Inicia sesión</a></p>
-        </div>
-      </div>
+        {serverMessage && <Alert severity="info" sx={{ mb: 2 }}>{serverMessage}</Alert>}
 
-      {/* Panel Derecho */}
-      <div className="right-panel">
-        <div className="brackets">[ ]</div>
-      </div>
-    </div>
-  )
+        <Box component="form" onSubmit={handleSubmit}>
+          <TextField
+            name="username"
+            margin="normal"
+            fullWidth
+            label="Usuario"
+            value={formData.username}
+            onChange={handleChange}
+            error={!!errors.username}
+            helperText={errors.username}
+          />
+          <TextField
+            name="password"
+            margin="normal"
+            fullWidth
+            type="password"
+            label="Contraseña"
+            value={formData.password}
+            onChange={handleChange}
+            error={!!errors.password}
+            helperText={errors.password}
+          />
+
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, bgcolor: "#1e1e1e", "&:hover": { bgcolor: "#333" } }}
+          >
+            Conectar
+          </Button>
+        </Box>
+
+        <Typography variant="body2" sx={{ mt: 2 }}>
+          ¿No tienes una cuenta?{" "}
+          <Link component={RouterLink} to="/register">Crear cuenta</Link>
+        </Typography>
+      </Grid>
+
+      <Grid
+          item
+          xs={false}
+          sm={6}
+          md={6}
+          sx={{
+          backgroundColor: "#2f3b3a",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+          overflow: "hidden",
+          }}
+      >
+          <Box sx={{ color: "#f4a300", fontSize: "100px", zIndex: 1 }}>[ ]</Box>
+          <Box sx={{
+          position: "absolute",
+          bottom: -100,
+          left: -100,
+          width: 300,
+          height: 300,
+          bgcolor: "#d9534f",
+          borderRadius: "50%"
+          }} />
+          <Box sx={{
+          position: "absolute",
+          bottom: -50,
+          right: -100,
+          width: 250,
+          height: 250,
+          bgcolor: "#6c757d",
+          borderRadius: "50%"
+          }} />
+      </Grid>
+    </Grid>
+  );
 }
 
 export default Login;
