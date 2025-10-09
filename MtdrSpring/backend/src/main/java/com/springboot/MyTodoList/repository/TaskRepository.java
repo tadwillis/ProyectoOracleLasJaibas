@@ -11,15 +11,15 @@ import java.util.List;
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
     
-    List<Task> findByStoryId(Long storyId);
+    List<Task> findByUserStoryId(Long userStoryId);  // ✅ Cambié de findByStoryId
     
     List<Task> findBySprintId(Long sprintId);
     
     List<Task> findByTeamId(Long teamId);
     
-    List<Task> findByAssignedUserId(Long userId);
+    List<Task> findByAssignedToId(Long userId);  // ✅ Cambié de findByAssignedUserId
     
-    List<Task> findByAssignedUserIdAndStatus(Long userId, String status);
+    List<Task> findByAssignedToIdAndStatus(Long userId, String status);  // ✅ Cambié de findByAssignedUserIdAndStatus
     
     @Query("SELECT t FROM Task t WHERE LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Task> searchByTitle(@Param("keyword") String keyword);

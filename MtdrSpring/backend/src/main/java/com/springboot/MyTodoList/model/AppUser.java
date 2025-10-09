@@ -5,6 +5,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "app_users")
 @Data
@@ -23,7 +25,7 @@ public class AppUser {
     @Column(nullable = false, unique = true, length = 100)
     private String email;
     
-    @Column(nullable = false, length = 255)  // <-- AGREGAR ESTE CAMPO
+    @Column(nullable = false, length = 255)  
     private String password;
     
     @Column(nullable = false, length = 100)
@@ -45,9 +47,11 @@ public class AppUser {
     private LocalDateTime updatedAt;
     
     @OneToMany(mappedBy = "createdBy")
+    @JsonIgnoreProperties("createdBy")  // Ignore createdBy when serializing teams
     private List<Team> createdTeams;
     
     @OneToMany(mappedBy = "user")
+    @JsonIgnoreProperties("user")  // Prevent circular reference
     private List<TeamMember> teamMemberships;
     
     @PrePersist

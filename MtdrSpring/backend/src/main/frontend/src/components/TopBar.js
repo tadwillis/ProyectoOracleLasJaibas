@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 // Ruta del logo
 const ORACLE_LOGO = '/img/Oracle-Symbol.png';
@@ -14,6 +14,8 @@ const ORACLE_LOGO = '/img/Oracle-Symbol.png';
 const links = [
   { to: '/',           label: 'Inicio' },
   { to: '/dashboard',  label: 'Dashboard' },
+  { to: '/stories',    label: 'User Stories' },
+  { to: '/sprints',    label: 'Sprints' },
   { to: '/teams',      label: 'Equipos' },
   { to: '/projects',   label: 'Proyectos' },
   { to: '/taskList',   label: 'Tareas' },
@@ -21,95 +23,119 @@ const links = [
 ];
 
 export default function TopBar() {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const handleMenu = (e) => setAnchorEl(e.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('userId');
+    navigate('/');
+  };
+
   const activeStyle = ({ isActive }) => ({
     color: isActive ? '#fff' : '#ddd',
-    fontWeight: isActive ? 700 : 500,
-    textTransform: 'none',
+    fontWeight: isActive ? 600 : 400,
+    textDecoration: 'none',
+    padding: '8px 12px',
+    borderRadius: '4px',
+    backgroundColor: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+    transition: 'all 0.2s',
+    '&:hover': {
+      backgroundColor: 'rgba(255,255,255,0.15)'
+    }
   });
 
+  const username = localStorage.getItem('username') || 'Usuario';
+
   return (
-    <AppBar
-      position="sticky"
-      elevation={0}
-      sx={{
-        bgcolor: '#212121',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-      }}
-    >
-      <Toolbar sx={{ maxWidth: 1680, mx: 'auto', width: '100%' }}>
-        {/* Izquierda: logo + marca */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box
-            component="img"
+    <AppBar position="sticky" sx={{ bgcolor: '#1e1e1e' }}>
+      <Toolbar>
+        {/* Logo */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mr: 4 }}>
+          <img
             src={ORACLE_LOGO}
-            alt="Oracle"
-            sx={{ height: 22, width: 'auto' }}
+            alt="Oracle Logo"
+            style={{ height: 32, marginRight: 8 }}
+            onError={(e) => {
+              e.target.src = 'https://upload.wikimedia.org/wikipedia/commons/c/cb/Oracle_logo.svg';
+            }}
           />
-          <Typography sx={{ color: '#fff', fontWeight: 700 }}>Java</Typography>
-          <Typography sx={{ color: '#bdbdbd' }}>Bot</Typography>
-          <Divider
-            orientation="vertical"
-            flexItem
-            sx={{ mx: 1.5, borderColor: 'rgba(255,255,255,0.18)' }}
-          />
-          <Typography sx={{ color: '#e0e0e0' }}>Equipo 3</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: '#fff' }}>
+            Java Bot
+          </Typography>
         </Box>
 
-        {/* Navegación: desktop */}
-        <Box sx={{ ml: 4, display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-          {links.map((l) => (
+        {/* Navigation Links */}
+        <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 1 }}>
+          {links.map((link) => (
             <Button
-              key={l.to}
+              key={link.to}
               component={NavLink}
-              to={l.to}
+              to={link.to}
               sx={activeStyle}
             >
-              {l.label}
+              {link.label}
             </Button>
           ))}
         </Box>
 
-        {/* Espaciador */}
-        <Box sx={{ flex: 1 }} />
-
-        {/* Usuario (avatar) */}
-        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
-          <Avatar sx={{ width: 28, height: 28, bgcolor: '#000' }}>
-            <AccountCircle htmlColor="#fff" fontSize="small" />
-          </Avatar>
-        </Box>
-
-        {/* Menú móvil */}
-        <Box sx={{ display: { xs: 'flex', md: 'none' }, ml: 1 }}>
-          <IconButton color="inherit" onClick={handleMenu} size="small">
-            <MenuIcon htmlColor="#fff" />
+        {/* User Menu */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="body2" sx={{ color: '#ddd' }}>
+            {username}
+          </Typography>
+          <IconButton
+            size="large"
+            onClick={handleMenu}
+            color="inherit"
+          >
+            <AccountCircle />
           </IconButton>
           <Menu
             anchorEl={anchorEl}
             open={open}
             onClose={handleClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
           >
-            {links.map((l) => (
-              <MenuItem
-                key={l.to}
-                component={NavLink}
-                to={l.to}
-                onClick={handleClose}
-              >
-                {l.label}
-              </MenuItem>
-            ))}
+            <MenuItem disabled>
+              <Typography variant="body2" color="text.secondary">
+                {username}
+              </Typography>
+            </MenuItem>
             <Divider />
-            <MenuItem disabled>Perfil</MenuItem>
+            <MenuItem onClick={() => { handleClose(); navigate('/dashboard'); }}>
+              Mi Dashboard
+            </MenuItem>
+            <MenuItem onClick={() => { handleClose(); navigate('/taskList'); }}>
+              Mis Tareas
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+              Cerrar Sesión
+            </MenuItem>
           </Menu>
         </Box>
+
+        {/* Mobile Menu Icon */}
+        <IconButton
+          size="large"
+          edge="start"
+          color="inherit"
+          sx={{ display: { xs: 'flex', md: 'none' } }}
+        >
+          <MenuIcon />
+        </IconButton>
       </Toolbar>
     </AppBar>
   );

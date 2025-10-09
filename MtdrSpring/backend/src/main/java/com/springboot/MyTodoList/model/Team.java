@@ -5,6 +5,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "teams")
 @Data
@@ -25,6 +27,7 @@ public class Team {
     
     @ManyToOne
     @JoinColumn(name = "created_by_id", nullable = false)
+    @JsonIgnoreProperties("createdTeams")  // Prevent circular reference to user's teams
     private AppUser createdBy;
     
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -34,12 +37,15 @@ public class Team {
     private LocalDateTime updatedAt;
     
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("team")  // Prevent circular reference to team
     private List<TeamMember> members;
     
     @OneToMany(mappedBy = "team")
+    @JsonIgnoreProperties("team")  // Prevent circular reference to team
     private List<Project> projects;
     
     @OneToMany(mappedBy = "team")
+    @JsonIgnoreProperties("team")  // Prevent circular reference to team
     private List<UserStory> stories;
     
     @PrePersist

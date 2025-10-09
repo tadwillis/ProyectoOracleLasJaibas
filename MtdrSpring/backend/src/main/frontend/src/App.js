@@ -4,6 +4,10 @@ import Login from "./components/Login";
 import TaskList from "./components/TaskList";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
+import UserStories from "./components/UserStories";
+import Sprints from "./components/Sprints";
+import Projects from "./components/Projects";
+import Teams from "./components/Teams";
 
 function App() {
   return (
@@ -17,6 +21,14 @@ function App() {
         <Route path="/taskList" element={<TaskList />} />
         {/* Dashboard para KPIs */}
         <Route path="/dashboard" element={<Dashboard />} />
+        {/* User Stories */}
+        <Route path="/stories" element={<UserStories />} />
+        {/* Sprints */}
+        <Route path="/sprints" element={<Sprints />} />
+        {/* Projects */}
+        <Route path="/projects" element={<Projects />} />
+        {/* Teams */}
+        <Route path="/teams" element={<Teams />} />
       </Routes>
     </Router>
   );

@@ -33,7 +33,7 @@ public class TaskService {
         Team team = teamRepository.findById(teamId)
             .orElseThrow(() -> new RuntimeException("Team not found"));
         
-        task.setStory(story);
+        task.setUserStory(story);
         task.setTeam(team);
         
         return taskRepository.save(task);
@@ -48,7 +48,7 @@ public class TaskService {
     }
     
     public List<Task> getTasksByStory(Long storyId) {
-        return taskRepository.findByStoryId(storyId);
+        return taskRepository.findByUserStoryId(storyId);
     }
     
     public List<Task> getTasksBySprint(Long sprintId) {
@@ -60,11 +60,11 @@ public class TaskService {
     }
     
     public List<Task> getTasksByAssignedUser(Long userId) {
-        return taskRepository.findByAssignedUserId(userId);
+        return taskRepository.findByAssignedToId(userId);
     }
     
     public List<Task> getTasksByUserAndStatus(Long userId, String status) {
-        return taskRepository.findByAssignedUserIdAndStatus(userId, status);
+        return taskRepository.findByAssignedToIdAndStatus(userId, status);
     }
     
     public Task updateTask(Long id, Task taskDetails) {
@@ -88,7 +88,7 @@ public class TaskService {
         AppUser user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
         
-        task.setAssignedUser(user);
+        task.setAssignedTo(user);
         return taskRepository.save(task);
     }
     
@@ -124,5 +124,4 @@ public class TaskService {
 
         return kpi;
     }
-
 }
