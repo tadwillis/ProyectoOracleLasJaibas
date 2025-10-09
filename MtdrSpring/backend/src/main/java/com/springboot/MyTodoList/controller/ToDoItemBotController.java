@@ -27,8 +27,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
-import com.springboot.MyTodoList.model.ToDoItem;
-import com.springboot.MyTodoList.service.ToDoItemService;
+import com.springboot.MyTodoList.model.Task;
+import com.springboot.MyTodoList.service.TaskService;
 import com.springboot.MyTodoList.service.AppUserService;
 import com.springboot.MyTodoList.util.BotCommands;
 import com.springboot.MyTodoList.util.BotHelper;
@@ -42,7 +42,7 @@ public class ToDoItemBotController implements SpringLongPollingBot, LongPollingS
 
     private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
 
-    private ToDoItemService toDoItemService;
+    private TaskService taskService;
     private AppUserService appUserService;
     private final TelegramClient telegramClient;
     private final BotProps botProps;
@@ -59,10 +59,10 @@ public class ToDoItemBotController implements SpringLongPollingBot, LongPollingS
         }
     }
 
-    public ToDoItemBotController(BotProps bp, ToDoItemService tsvc, AppUserService ausvc) {
+    public ToDoItemBotController(BotProps bp, TaskService tsvc, AppUserService ausvc) {
         this.botProps = bp;
         telegramClient = new OkHttpTelegramClient(getBotToken());
-        toDoItemService = tsvc;
+        taskService = tsvc;
         appUserService = ausvc;
     }
 
@@ -78,14 +78,14 @@ public class ToDoItemBotController implements SpringLongPollingBot, LongPollingS
         String messageTextFromTelegram = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
 
-        BotActions actions = new BotActions(telegramClient, toDoItemService);
+        BotActions actions = new BotActions(telegramClient, taskService);
         actions.setAppUserService(appUserService);
         actions.setRequestText(messageTextFromTelegram);
         actions.setChatId(chatId);
 
-        if(actions.getTodoService() == null){
-            logger.info("todosvc error");
-            actions.setTodoService(toDoItemService);
+        if(actions.getTaskService() == null){
+            logger.info("taskService error");
+            actions.setTaskService(taskService);
         }
 
         actions.fnStart();
@@ -96,7 +96,7 @@ public class ToDoItemBotController implements SpringLongPollingBot, LongPollingS
         actions.fnListAll();
         actions.fnAddItem();
         
-        // Nuevas acciones para AppUser
+        // Funciones para AppUser (mantiene funcionalidad existente)
         actions.fnUsersList();
         actions.fnUserBy();
         actions.fnUsersByStatus();
@@ -104,6 +104,7 @@ public class ToDoItemBotController implements SpringLongPollingBot, LongPollingS
         actions.fnDeleteUser();
         actions.fnMe();
         
+        // IMPORTANTE: fnElse debe ir al final porque maneja el flujo de login y creación de tareas
         actions.fnElse();
     }
 
@@ -112,5 +113,3 @@ public class ToDoItemBotController implements SpringLongPollingBot, LongPollingS
         System.out.println("Registered bot running state is: " + botSession.isRunning());
     }
 }
-
-

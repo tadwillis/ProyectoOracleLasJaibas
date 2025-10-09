@@ -14,62 +14,77 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Transactional
 public class AppUserService {
-    
+
     private final AppUserRepository userRepository;
-    
+
     public AppUser createUser(AppUser user) {
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new IllegalArgumentException("Username already exists");
         }
+        
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
+        
         return userRepository.save(user);
     }
-    
+
     public Optional<AppUser> getUserById(Long id) {
         return userRepository.findById(id);
     }
-    
+
     public Optional<AppUser> getUserByUsername(String username) {
         return userRepository.findByUsername(username);
     }
-    
+
     public Optional<AppUser> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
-    
+
     public List<AppUser> getAllUsers() {
         return userRepository.findAll();
     }
-    
+
     public List<AppUser> getUsersByStatus(String status) {
         return userRepository.findByStatus(status);
     }
-    
+
     public AppUser updateUser(Long id, AppUser userDetails) {
         AppUser user = userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        
+                .orElseThrow(() -> new RuntimeException("User not found"));
         user.setFullName(userDetails.getFullName());
         user.setPhone(userDetails.getPhone());
         user.setStatus(userDetails.getStatus());
-        
         return userRepository.save(user);
     }
-    
+
     public void updateLastLogin(Long userId) {
         AppUser user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
     }
-    
+
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
-    
+
     public List<AppUser> searchUsersByName(String name) {
         return userRepository.searchByFullName(name);
+    }
+
+    // NUEVO: Método de login/autenticación
+    public Optional<AppUser> login(String username, String password) {
+        Optional<AppUser> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isPresent()) {
+            AppUser user = userOpt.get();
+            // Comparar contraseña (en producción usarías BCrypt o similar)
+            if (user.getPassword() != null && user.getPassword().equals(password)) {
+                // Actualizar última fecha de login
+                updateLastLogin(user.getId());
+                return Optional.of(user);
+            }
+        }
+        return Optional.empty();
     }
 }

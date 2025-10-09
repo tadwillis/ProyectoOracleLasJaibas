@@ -19,56 +19,74 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Transactional
 public class TaskService {
-    
+
     private final TaskRepository taskRepository;
     private final UserStoryRepository storyRepository;
     private final TeamRepository teamRepository;
     private final AppUserRepository userRepository;
-    
+
     public Task createTask(Task task, Long storyId, Long teamId) {
         UserStory story = storyRepository.findById(storyId)
-            .orElseThrow(() -> new RuntimeException("Story not found"));
+                .orElseThrow(() -> new RuntimeException("Story not found"));
         Team team = teamRepository.findById(teamId)
-            .orElseThrow(() -> new RuntimeException("Team not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Team not found"));
+
         task.setStory(story);
         task.setTeam(team);
-        
         return taskRepository.save(task);
     }
-    
+
+    // NUEVO: Método para crear tarea con usuario asignado automáticamente
+    public Task createTaskWithAssignedUser(Task task, Long storyId, Long teamId, Long assignedUserId) {
+        UserStory story = storyRepository.findById(storyId)
+                .orElseThrow(() -> new RuntimeException("Story not found"));
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("Team not found"));
+        AppUser user = userRepository.findById(assignedUserId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        task.setStory(story);
+        task.setTeam(team);
+        task.setAssignedUser(user);
+        return taskRepository.save(task);
+    }
+
     public Optional<Task> getTaskById(Long id) {
         return taskRepository.findById(id);
     }
-    
+
     public List<Task> getAllTasks() {
         return taskRepository.findAll();
     }
-    
+
     public List<Task> getTasksByStory(Long storyId) {
         return taskRepository.findByStoryId(storyId);
     }
-    
+
     public List<Task> getTasksBySprint(Long sprintId) {
         return taskRepository.findBySprintId(sprintId);
     }
-    
+
     public List<Task> getTasksByTeam(Long teamId) {
         return taskRepository.findByTeamId(teamId);
     }
-    
+
+    // MODIFICADO: Renombrado para ser más claro en el bot
+    public List<Task> getTasksByUserId(Long userId) {
+        return taskRepository.findByAssignedUserId(userId);
+    }
+
     public List<Task> getTasksByAssignedUser(Long userId) {
         return taskRepository.findByAssignedUserId(userId);
     }
-    
+
     public List<Task> getTasksByUserAndStatus(Long userId, String status) {
         return taskRepository.findByAssignedUserIdAndStatus(userId, status);
     }
-    
+
     public Task updateTask(Long id, Task taskDetails) {
         Task task = taskRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Task not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Task not found"));
         task.setTitle(taskDetails.getTitle());
         task.setDescription(taskDetails.getDescription());
         task.setStatus(taskDetails.getStatus());
@@ -76,28 +94,25 @@ public class TaskService {
         task.setPriority(taskDetails.getPriority());
         task.setStartDate(taskDetails.getStartDate());
         task.setEndDate(taskDetails.getEndDate());
-        
         return taskRepository.save(task);
     }
-    
+
     public Task assignTask(Long taskId, Long userId) {
         Task task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new RuntimeException("Task not found"));
         AppUser user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        
+                .orElseThrow(() -> new RuntimeException("User not found"));
         task.setAssignedUser(user);
         return taskRepository.save(task);
     }
-    
+
     public Task updateTaskStatus(Long id, String newStatus) {
         Task task = taskRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Task not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Task not found"));
         task.setStatus(newStatus);
         return taskRepository.save(task);
     }
-    
+
     public void deleteTask(Long id) {
         taskRepository.deleteById(id);
     }
