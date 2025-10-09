@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -101,4 +103,26 @@ public class TaskService {
     public void deleteTask(Long id) {
         taskRepository.deleteById(id);
     }
+
+    public Map<String, Double> getKpiTotals() {
+        List<Task> tasks = taskRepository.findAll();
+
+        double totalEstimated = tasks.stream()
+            .filter(t -> t.getEstimatedHours() != null)
+            .mapToDouble(Task::getEstimatedHours)
+            .sum();
+
+        double totalEffort = tasks.stream()
+            .filter(t -> t.getEffortHours() != null)
+            .mapToDouble(Task::getEffortHours)
+            .sum();
+
+        Map<String, Double> kpi = new HashMap<>();
+        kpi.put("totalEstimatedHours", totalEstimated);
+        kpi.put("totalEffortHours", totalEffort);
+        kpi.put("efficiency", totalEstimated == 0 ? 0 : (totalEffort / totalEstimated) * 100);
+
+        return kpi;
+    }
+
 }

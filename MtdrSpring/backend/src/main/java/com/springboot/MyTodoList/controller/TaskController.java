@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -62,6 +64,11 @@ public class TaskController {
             @PathVariable Long userId,
             @PathVariable String status) {
         return ResponseEntity.ok(taskService.getTasksByUserAndStatus(userId, status));
+    }
+
+    @GetMapping("/kpi/hours")
+    public ResponseEntity<Map<String, Double>> getKpiHours() {
+        return ResponseEntity.ok(taskService.getKpiTotals());
     }
     
     @PutMapping("/{id}")

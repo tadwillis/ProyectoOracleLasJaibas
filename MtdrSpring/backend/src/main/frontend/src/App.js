@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./components/Login";
 import TaskList from "./components/TaskList";
 import Register from "./components/Register";
+import Dashboard from "./components/Dashboard";
 
 function App() {
   return (
@@ -14,6 +15,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         {/* Tablero Kanban */}
         <Route path="/taskList" element={<TaskList />} />
+        {/* Dashboard para KPIs */}
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </Router>
   );
