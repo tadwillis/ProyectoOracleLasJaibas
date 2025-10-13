@@ -12,7 +12,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import TopBar from './TopBar';
 
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = '/api';
 
 // Banner configuration
 const BANNER_SRC = "/img/banner-top.png";

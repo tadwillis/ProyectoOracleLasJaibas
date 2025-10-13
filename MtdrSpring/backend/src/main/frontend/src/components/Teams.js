@@ -18,7 +18,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import TopBar from './TopBar';
 
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = '/api';
 
 // Banner configuration
 const BANNER_SRC = "/img/banner-top.png";

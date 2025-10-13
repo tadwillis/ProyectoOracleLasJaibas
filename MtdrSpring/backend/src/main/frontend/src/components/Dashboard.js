@@ -26,7 +26,7 @@ function Dashboard() {
     const [kpi, setKpi] = useState(null);
 
     useEffect(() => {
-    fetch("http://localhost:8080/api/tasks/kpi/hours")
+    fetch("/api/tasks/kpi/hours")
         .then((res) => res.json())
         .then((data) => setKpi(data))
         .catch((err) => console.error("Error al cargar KPI:", err));
