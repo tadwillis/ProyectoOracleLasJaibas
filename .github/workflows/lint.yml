@@ -38,35 +38,9 @@ jobs:
       - name: Run Super-Linter
         uses: super-linter/super-linter@v6
         env:
-          DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: main
           VALIDATE_ALL_CODEBASE: true
-          # Activamos Java y apuntamos a tu archivo en la raíz:
           VALIDATE_JAVA: true
           LINTER_RULES_PATH: ./
           JAVA_FILE_NAME: java_checks.xml
-          # Mantengo tus desactivaciones tal cual
-          VALIDATE_KUBERNETES_KUBECONFORM: false
-          VALIDATE_SHELL_SHFMT: false
-          VALIDATE_CSS: false
-          VALIDATE_CSS_PRETTIER: false
-          VALIDATE_GITLEAKS: false
-          VALIDATE_JAVASCRIPT_STANDARD: false
-          VALIDATE_JSCPD: false
-          VALIDATE_NATURAL_LANGUAGE: false
-          VALIDATE_MARKDOWN: false
-          VALIDATE_PYTHON_BLACK: false
-          VALIDATE_PYTHON_FLAKE8: false
-          VALIDATE_PYTHON_ISORT: false
-          VALIDATE_PYTHON_RUFF: false
-          VALIDATE_TERRAFORM_TFLINT: false
-          VALIDATE_TERRAFORM_FMT: false
-          VALIDATE_GOOGLE_JAVA_FORMAT: false
-          VALIDATE_YAML: false
-          VALIDATE_YAML_PRETTIER: false
-          BASH_SEVERITY: warning
-          VALIDATE_BASH_EXEC: false
-          VALIDATE_BASH: false
-          VALIDATE_KUBEVAL: false
-          VALIDATE_CHECKOV: false
-          VALIDATE_PYTHON_PYLINT: false
