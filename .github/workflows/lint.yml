@@ -10,7 +10,7 @@ on:
       tags:
         description: 'Test scenario tags'
   push:
-    branches: [ "main" ]  # antes estaba null; así sí se ejecuta
+    branches: [ "main" ]
 
 jobs:
   super-lint:
@@ -20,10 +20,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          # Full git history is needed to get a proper list of changed files
           fetch-depth: 0
 
-      # Lo dejamos para el futuro (corregí el punto extra en --html)
       - name: Selenium Test
         continue-on-error: true
         run: |
@@ -34,7 +32,11 @@ jobs:
           pytest test1.py --html=report.html
           cat report.html
 
-      # Ejecuta Super-Linter usando tu archivo java_checks.xml en la raíz
+      - name: Debug VALIDATE_* env vars
+        run: |
+          echo "== VALIDATE_* environment variables present =="
+          env | sort | grep -E '^VALIDATE_' || true
+
       - name: Run Super-Linter
         uses: super-linter/super-linter@v6
         env:
