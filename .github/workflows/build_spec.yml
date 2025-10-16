@@ -1,57 +1,28 @@
 name: GraalVM build
 on: [push, pull_request]
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: graalvm/setup-graalvm@v1
         with:
-          java-version: '21'                # LTS recomendado
-          distribution: 'graalvm'
-          components: 'native-image'        # instala native-image
+          java-version: '22'      # See 'Options' for more details
+          distribution: 'graalvm' # See 'Supported distributions' for available options
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check GraalVM
+      - name: Example step
         run: |
-          set -euxo pipefail
           echo "GRAALVM_HOME: $GRAALVM_HOME"
           echo "JAVA_HOME: $JAVA_HOME"
           java --version
           native-image --version
-
       - name: Extract configuration files
-        run: |
-          set -euxo pipefail
-          cd MtdrSpring
-          wget https://objectstorage.mx-queretaro-1.oraclecloud.com/p/fT00kGideJgtIjmd87s7dU-8j5ObYmfW4b1hXpdVF3HHZ3YGPTD5c6h92kBamSqs/n/axjozjviyuvz/b/reacttodo-asdvp/o/deployment_config.tgz ;
-          tar -xzvf deployment_config.tgz
-          # si env.sh/at.cfg están dentro de una carpeta, ajusta estas rutas:
-          source ./env.sh
-          echo "${{ secrets.OCIR_TOKEN }}" | docker login \
-            -u "axjozjviyuvz/a00829870@tec.mx" \
-            --password-stdin mx-queretaro-1.ocir.io
-
-      - name: Build
-        env:
-          # Exporta aquí tus VITE_* / REACT_APP_* si el frontend los requiere
-          # VITE_API_URL: https://...
-          NODE_OPTIONS: --max_old_space_size=4096
-        run: |
-          set -euxo pipefail
-          cd MtdrSpring
-          source ./env.sh
-          ls -la
-          # Si tu frontend vive en MtdrSpring/frontend, compílalo explícitamente:
-          if [ -d frontend ]; then
-            pushd frontend
-            npm ci --no-audit --no-fund || true   # o deja que lo haga frontend-maven-plugin
-            npm run build
-            popd
-          fi
-          chmod +x backend/build.sh
-          bash -x backend/build.sh
-
+        run: cd MtdrSpring;
+              wget https://objectstorage.mx-queretaro-1.oraclecloud.com/p/fT00kGideJgtIjmd87s7dU-8j5ObYmfW4b1hXpdVF3HHZ3YGPTD5c6h92kBamSqs/n/axjozjviyuvz/b/reacttodo-asdvp/o/deployment_config.tgz ;
+              tar -xzvf deployment_config.tgz;
+              source env.sh;
+              cat at.cfg | docker login -u "axjozjviyuvz/a00829870@tec.mx" --password-stdin mx-queretaro-1.ocir.io
+      - name: "Build"
+        run:  cd MtdrSpring;
+              source env.sh;
+              (cd backend;source build.sh)
