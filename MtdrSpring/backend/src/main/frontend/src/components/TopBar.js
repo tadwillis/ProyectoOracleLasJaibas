@@ -1,7 +1,7 @@
 // src/components/TopBar.js
 import * as React from 'react';
 import {
-  AppBar, Toolbar, Box, Typography, IconButton, Button, Avatar,
+  AppBar, Toolbar, Box, Typography, IconButton, Button,
   Menu, MenuItem, Divider
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';

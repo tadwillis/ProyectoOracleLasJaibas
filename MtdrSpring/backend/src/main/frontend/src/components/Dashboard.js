@@ -1,12 +1,11 @@
 // TaskList.js
 import React, { useState, useEffect } from 'react';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
+
 import {
-  Button, Paper, LinearProgress, Typography, Box, Grid, Stack,
-  Divider, Avatar, TextField, MenuItem, Chip, IconButton
+  Paper, LinearProgress, Typography, Box, Grid,
+  Divider, Avatar, Chip
 } from '@mui/material';
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+
 import TopBar from '../components/TopBar';
 
 const BANNER_SRC = "/img/banner-top2.png";

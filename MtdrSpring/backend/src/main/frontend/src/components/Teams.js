@@ -15,7 +15,6 @@ import GroupIcon from '@mui/icons-material/Group';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import InfoIcon from '@mui/icons-material/Info';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import TopBar from './TopBar';
 
 const API_BASE = '/api';
@@ -361,10 +360,10 @@ function Teams() {
   };
 
   // Get member count for a team
-  const getMemberCount = (teamId) => {
+  //const getMemberCount = (teamId) => {
     // This is a simplified version - in production you'd fetch this from the backend
-    return 0; // Placeholder
-  };
+    //return 0; // Placeholder
+  //};
 
   return (
     <>
