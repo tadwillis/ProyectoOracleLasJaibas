@@ -1,0 +1,30 @@
+name: GraalVM build
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      
+uses: actions/checkout@v4
+uses: graalvm/setup-graalvm@v1
+    with:
+      java-version: '22'      # See 'Options' for more details
+      distribution: 'graalvm' # See 'Supported distributions' for available options
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+name: Java version
+  run: |
+    echo "GRAALVM_HOME: $GRAALVM_HOME"
+    echo "JAVA_HOME: $JAVA_HOME"
+    java --version
+    native-image --version
+name: Extract configuration files
+run: |
+  cd MtdrSpring;
+      wget https://objectstorage.mx-queretaro-1.oraclecloud.com/p/9d4QQeajBM0KpBMHJZXxz9dDo4Pj50TlCykE2_1HMkUwjVJAljLkJVcSnpFGm71i/n/axyqsveqbf4z/b/reacttodo-t9ldr/o/deployment_config.tgz
+      tar -xzvf deployment_config.tgz;
+      source env.sh;
+      cat at.cfg | docker login -u "axyqsveqbf4z/a00835868@tec.mx" --password-stdin mx-queretaro-1.ocir.io
+name: "Build"
+run: |
+ cd MtdrSpring;
+      source env.sh;(cd backend;source build.sh)
