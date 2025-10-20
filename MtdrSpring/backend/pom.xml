@@ -109,6 +109,22 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+		
+		<!-- Mockito Core -->
+		<dependency>
+    			<groupId>org.mockito</groupId>
+    			<artifactId>mockito-core</artifactId>
+    			<version>5.8.0</version>
+    			<scope>test</scope>
+		</dependency>
+
+		<!-- Mockito JUnit Jupiter (para integración con JUnit 5) -->
+		<dependency>
+    			<groupId>org.mockito</groupId>
+    			<artifactId>mockito-junit-jupiter</artifactId>
+    			<version>5.8.0</version>
+    			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

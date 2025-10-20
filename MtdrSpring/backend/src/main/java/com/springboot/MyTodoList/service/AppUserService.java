@@ -88,4 +88,19 @@ public class AppUserService {
     public boolean validatePassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
+
+    // NUEVO: Método de login/autenticación (TELEGRAM)
+    public Optional<AppUser> login(String username, String password) {
+        Optional<AppUser> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isPresent()) {
+            AppUser user = userOpt.get();
+            // Comparar contraseña (en producción usarías BCrypt o similar)
+            if (user.getPassword() != null && user.getPassword().equals(password)) {
+                // Actualizar última fecha de login
+                updateLastLogin(user.getId());
+                return Optional.of(user);
+            }
+        }
+        return Optional.empty();
+    }
 }
