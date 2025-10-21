@@ -70,7 +70,7 @@ public class TaskService {
     public Task updateTask(Long id, Task taskDetails) {
         Task task = taskRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Task not found"));
-        
+
         task.setTitle(taskDetails.getTitle());
         task.setDescription(taskDetails.getDescription());
         task.setStatus(taskDetails.getStatus());
@@ -78,9 +78,17 @@ public class TaskService {
         task.setPriority(taskDetails.getPriority());
         task.setStartDate(taskDetails.getStartDate());
         task.setEndDate(taskDetails.getEndDate());
-        
+
+        //actualiza el usuario asignado si se manda en el JSON
+        if (taskDetails.getAssignedTo() != null) {
+            task.setAssignedTo(taskDetails.getAssignedTo());
+        } else {
+            task.setAssignedTo(null);
+        }
+
         return taskRepository.save(task);
     }
+
     
     public Task assignTask(Long taskId, Long userId) {
         Task task = taskRepository.findById(taskId)
