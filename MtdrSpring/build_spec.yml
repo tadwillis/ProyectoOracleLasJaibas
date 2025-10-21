@@ -1,0 +1,134 @@
+version: 0.1
+component: build
+timeoutInSeconds: 1800
+shell: bash
+
+env:
+  variables:
+    JAVA_HOME: /usr/lib64/graalvm/graalvm22-ee-java17
+    OCIR_TOKEN_SECRET_OCID: "ocid1.vaultsecret.oc1.mx-queretaro-1.amaaaaaanmyo7oiag5jyndoyzqfcdsmvcrymoz77lyeintpo7b5sxpz6eyzq"
+
+    # 👇 Variables requeridas por build.sh
+    DOCKER_REGISTRY: qro.ocir.io/axjozjviyuvz/reacttodo/asdvp
+    IMAGE_VERSION: "0.1"
+
+  exportedVariables:
+    - BuildServiceDemoVersion
+
+steps:
+  # -------------------------------
+  # 🧩 Instalar dependencias del sistema
+  # -------------------------------
+  - type: Command
+    name: "Enable CRB repo and install native-image deps"
+    timeoutInSeconds: 900
+    command: |
+      set -euo pipefail
+      echo "🔧 Enabling required repos and installing system deps..."
+      yum -y install dnf-plugins-core || true
+      yum config-manager --set-enabled ol8_codeready_builder
+      yum config-manager --set-enabled ol8_addons || true
+      yum -y install gcc gcc-c++ glibc-devel zlib-devel glibc-static libstdc++-static zlib-static
+      echo "✅ Dependencies installed."
+
+  # -------------------------------
+  # ☕ Instalar GraalVM Enterprise
+  # -------------------------------
+  - type: Command
+    name: "Install GraalVM Enterprise 22.x Native Image for Java17"
+    timeoutInSeconds: 900
+    command: |
+      set -euo pipefail
+      echo "📦 Installing GraalVM Enterprise 22 for Java 17..."
+      yum -y install graalvm22-ee-17-native-image
+      echo "✅ GraalVM installation complete."
+
+  # -------------------------------
+  # ⚙️ Configurar PATH de Java
+  # -------------------------------
+  - type: Command
+    name: "Set PATH Variable"
+    command: |
+      set -e
+      export PATH=$JAVA_HOME/bin:$PATH
+      echo "PATH set to: $PATH"
+
+  # -------------------------------
+  # 🔐 Docker Login leyendo el secreto del Vault
+  # -------------------------------
+  - type: Command
+    name: "Docker Login (read Vault secret at build time)"
+    timeoutInSeconds: 600
+    command: |
+      set -euo pipefail
+
+      if [ -z "${OCIR_TOKEN_SECRET_OCID:-}" ]; then
+        echo "❌ OCIR_TOKEN_SECRET_OCID no está definido."
+        exit 1
+      fi
+
+      echo "🔎 Fetching OCIR auth token from OCI Vault..."
+      TOKEN_B64=$(oci secrets secret-bundle get \
+        --secret-id "${OCIR_TOKEN_SECRET_OCID}" \
+        --stage CURRENT \
+        --query 'data."secret-bundle-content".content' \
+        --raw-output)
+
+      if [ -z "${TOKEN_B64:-}" ]; then
+        echo "❌ No se obtuvo contenido del secreto (revisa policies/Vault/OCID)."
+        exit 1
+      fi
+
+      TOKEN=$(printf '%s' "${TOKEN_B64}" | base64 -d || true)
+      if [ -z "${TOKEN:-}" ]; then
+        echo "❌ No se pudo decodificar el contenido del secreto."
+        exit 1
+      fi
+
+      echo "🔐 Logging in to OCIR..."
+      printf '%s' "${TOKEN}" | docker login -u "axjozjviyuvz/a00829870@tec.mx" --password-stdin qro.ocir.io
+      echo "✅ Docker login successful."
+
+  # -------------------------------
+  # 🏗️ Build del backend (usa tus variables)
+  # -------------------------------
+  - type: Command
+    name: "Build Spring Boot backend"
+    timeoutInSeconds: 1200
+    command: |
+      set -euo pipefail
+      cd MtdrSpring/backend
+      echo "🚀 Starting build process..."
+
+      # 🔧 Blindaje: asegurar que DOCKER_REGISTRY/IMAGE_VERSION estén definidos
+      export DOCKER_REGISTRY="${DOCKER_REGISTRY:-qro.ocir.io/axyqsveqbf4z/reacttodo/t9ldr}"
+      export IMAGE_VERSION="${IMAGE_VERSION:-0.1}"
+
+      chmod +x build.sh || true
+      ./build.sh
+      echo "✅ Backend build completed successfully."
+
+  # -------------------------------
+  # 🔖 Normalizar nombre del artefacto a app.jar
+  # -------------------------------
+  - type: Command
+    name: "Normalize artifact name"
+    command: |
+      set -euo pipefail
+      cd MtdrSpring/backend/target
+      ls -al
+      JAR=$(ls -1t *.jar | head -n1)
+      if [ -z "${JAR:-}" ]; then
+        echo "❌ No se encontró ningún JAR en target/"
+        exit 1
+      fi
+      echo "📦 Usando JAR: $JAR"
+      cp -f "$JAR" app.jar
+
+# -------------------------------
+# 📦 Output Artifacts
+# -------------------------------
+outputArtifacts:
+  - name: backend-jar
+    type: BINARY
+    location: MtdrSpring/backend/target/app.jar
