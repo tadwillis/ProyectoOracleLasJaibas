@@ -22,9 +22,9 @@ const PRIORITY_MAP   = { bajo: 0, medio: 1, alto: 2 };
 const PRIORITY_LABEL = (n) => ({0:'Bajo',1:'Medio',2:'Alto'}[Number(n)] ?? 'Bajo');
 const PRIORITY_COLOR = (n) => {
   const v = Number(n);
-  if (v === 2) return 'error';   // rojo
-  if (v === 1) return 'warning'; // amarillo
-  return 'success';              // verde
+  if (v === 2) return 'error';
+  if (v === 1) return 'warning';
+  return 'success';              
 };
 
 const normDate = (s) => (s && String(s).trim() ? String(s).trim() : null);
@@ -50,7 +50,7 @@ const heroSx = {
   backgroundRepeat: 'no-repeat',
   backgroundSize: 'cover',
   backgroundPosition: 'center',
-  py: { xs: 3, sm: 4 }, // (padding vertical)
+  py: { xs: 3, sm: 4 },
 };
 
 // ===================== Componente =====================
@@ -58,6 +58,7 @@ function TaskList() {
   const [isLoading, setLoading] = useState(false);
   const [isInserting, setInserting] = useState(false);
   const [items, setItems] = useState([]);
+  const [users, setUsers] = useState([]); // usuarios para asignar
   const [error, setError] = useState();
 
   // Diálogo "Agregar tarea"
@@ -70,6 +71,7 @@ function TaskList() {
     priority: 'bajo',
     startDate: '',
     endDate: '',
+    assignedUserId: '' // string en UI
   });
 
   // Diálogo "Editar tarea"
@@ -84,10 +86,25 @@ function TaskList() {
     priority: 'bajo',
     startDate: '',
     endDate: '',
+    assignedUserId: '' // string en UI
   });
 
-  // Cargar tareas
-  useEffect(() => { loadTasks(); }, []);
+  // ======== Cargar tareas y usuarios ========
+  useEffect(() => { 
+    loadTasks(); 
+    loadUsers();
+  }, []);
+
+  async function loadUsers() {
+    try {
+      const res = await fetch('/api/users', { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('Error al obtener usuarios');
+      const data = await res.json();
+      setUsers(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error('Error usuarios:', e);
+    }
+  }
 
   async function loadTasks() {
     setLoading(true); setError(undefined);
@@ -102,10 +119,30 @@ function TaskList() {
         throw new Error(`Error al obtener tareas (HTTP ${res.status}) ${t}`);
       }
       const data = await res.json();
-      const rows = (Array.isArray(data) ? data : []).map(t => ({
-        ...t,
-        status: normalizeStatus(t.status)
-      }));
+
+      // Adaptador para assignedTo / assignedUserId / ASSIGNED_USER_ID
+      const rows = (Array.isArray(data) ? data : []).map(t => {
+        const status = normalizeStatus(t.status);
+
+        const assignedUserId =
+          t?.assignedTo?.id ??
+          t?.assignedUserId ??
+          t?.ASSIGNED_USER_ID ??
+          null;
+
+        const assignedTo =
+          t.assignedTo ??
+          (assignedUserId != null
+            ? {
+                id: Number(assignedUserId),
+                // intenta poblar nombre si viene en otra propiedad alternativa
+                fullName: t.assignedTo?.fullName ?? t.assignedUserName ?? null
+              }
+            : null);
+
+        return { ...t, status, assignedTo, ASSIGNED_USER_ID: assignedUserId };
+      });
+
       setItems(rows);
     } catch (e) {
       console.error(e); setError(e);
@@ -131,15 +168,22 @@ function TaskList() {
     }
     setInserting(true); setError(undefined);
 
+    const assignedId = form.assignedUserId === '' ? null : Number(form.assignedUserId);
+
     const body = {
       title: form.title.trim(),
       description: form.description.trim(),
       status: 'todo',
       estimatedHours: normNum(form.estimatedHours),
-      effortHours:   normNum(form.effortHours),
+      effortHours: normNum(form.effortHours),
       priority: PRIORITY_MAP[form.priority] ?? 0,
       startDate: normDate(form.startDate),
-      endDate:   normDate(form.endDate)
+      endDate: normDate(form.endDate),
+
+      // Mandamos variantes; crear ya funcionaba, pero mantenemos consistencia
+      assignedTo: assignedId ? { id: assignedId } : null,
+      assignedUserId: assignedId,
+      ASSIGNED_USER_ID: assignedId
     };
 
     const qs = new URLSearchParams({
@@ -167,7 +211,8 @@ function TaskList() {
         effortHours: '',
         priority: 'bajo',
         startDate: '',
-        endDate: ''
+        endDate: '',
+        assignedUserId: ''
       });
     } catch (e) {
       console.error(e); setError(e);
@@ -176,7 +221,7 @@ function TaskList() {
     }
   }
 
-  // =========== Editar =============
+  // =========== Editar ==============
   const openEditDialog = (task) => {
     setEditId(task.id);
     setEditStatus(task.status);
@@ -188,7 +233,8 @@ function TaskList() {
       priority: (['0','1','2'].includes(String(task.priority)) ?
                  {0:'bajo',1:'medio',2:'alto'}[Number(task.priority)] : 'bajo'),
       startDate: task.startDate ? String(task.startDate).slice(0,10) : '',
-      endDate:   task.endDate   ? String(task.endDate).slice(0,10)   : ''
+      endDate:   task.endDate   ? String(task.endDate).slice(0,10)   : '',
+      assignedUserId: task.assignedTo?.id ?? task.ASSIGNED_USER_ID ?? '' // robusto
     });
     setOpenEdit(true);
   };
@@ -208,32 +254,84 @@ function TaskList() {
     }
     setError(undefined);
 
+    // string -> number (o null)
+    const assignedId = editForm.assignedUserId === '' ? null : Number(editForm.assignedUserId);
+
     const body = {
       title: editForm.title.trim(),
       description: editForm.description.trim(),
       status: editStatus,
       estimatedHours: normNum(editForm.estimatedHours),
-      effortHours:   normNum(editForm.effortHours),
+      effortHours: normNum(editForm.effortHours),
       priority: PRIORITY_MAP[editForm.priority] ?? 0,
       startDate: normDate(editForm.startDate),
-      endDate:   normDate(editForm.endDate)
+      endDate: normDate(editForm.endDate),
+
+      // Enviar todas las variantes para máxima compatibilidad con el backend
+      assignedTo: assignedId ? { id: assignedId } : null,
+      assignedUserId: assignedId,
+      ASSIGNED_USER_ID: assignedId
     };
 
     try {
       const res = await fetch(`${API_LIST}/${editId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        method: 'PUT', // cambia a 'PATCH' si tu backend lo requiere
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         credentials: 'same-origin',
         body: JSON.stringify(body)
       });
+
       if (!res.ok) {
-        const t = await res.text().catch(()=> '');
+        const t = await res.text().catch(() => '');
         throw new Error(`Error al actualizar la tarea (HTTP ${res.status}) ${t}`);
       }
-      await loadTasks();
+
+      // Optimistic update inmediato
+      const pickedUser = users.find(u => String(u.id) === String(editForm.assignedUserId)) || null;
+      setItems(prev =>
+        prev.map(t =>
+          t.id === editId
+            ? {
+                ...t,
+                assignedTo: assignedId
+                  ? { id: assignedId, fullName: pickedUser?.fullName ?? t.assignedTo?.fullName ?? null }
+                  : null,
+                ASSIGNED_USER_ID: assignedId ?? null,
+                status: editStatus
+              }
+            : t
+        )
+      );
+
+      // Confirmación con GET por si el backend normaliza campos
+      try {
+        const resTask = await fetch(`${API_LIST}/${editId}`, {
+          headers: { 'Accept': 'application/json' },
+          credentials: 'same-origin'
+        });
+        if (resTask.ok) {
+          const updatedTask = await resTask.json();
+          setItems(prev =>
+            prev.map(t =>
+              t.id === editId
+                ? { ...t, ...updatedTask, assignedTo: updatedTask.assignedTo ?? t.assignedTo }
+                : t
+            )
+          );
+        } else {
+          await loadTasks(); // fallback si no responde bien
+        }
+      } catch {
+        await loadTasks(); // fallback seguro
+      }
+
       setOpenEdit(false);
     } catch (e2) {
-      console.error(e2); setError(e2);
+      console.error(e2);
+      setError(e2);
     }
   }
 
@@ -283,7 +381,6 @@ function TaskList() {
   // ===================== UI =====================
   return (
     <>
-
       <TopBar />
 
       {/* imagen detrás del título */}
@@ -387,6 +484,14 @@ function TaskList() {
                                     />
                                   </Stack>
 
+                                  {/* Usuario asignado (nombre + ID si está disponible) */}
+                                  {(item.assignedTo?.fullName || item.assignedTo?.id != null || item.ASSIGNED_USER_ID != null) && (
+                                    <Typography variant="caption" sx={{ display: 'block', mb: 0.3 }}>
+                                      Asignado a: {item.assignedTo?.fullName ?? '—'}
+                                      {` (ID: ${item.assignedTo?.id ?? item.ASSIGNED_USER_ID ?? '—'})`}
+                                    </Typography>
+                                  )}
+
                                   {/* Descripción */}
                                   {item.description && (
                                     <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>
@@ -394,12 +499,20 @@ function TaskList() {
                                     </Typography>
                                   )}
 
-                                  {/* Detalles */}
+                                  {/* Detalles (solo si hay valor) */}
                                   <Stack spacing={0.25}>
-                                    <Typography variant="caption"><b>Estimado:</b> {item.estimatedHours ?? '-'} h</Typography>
-                                    <Typography variant="caption"><b>Tiempo Esfuerzo:</b> {item.effortHours ?? '-'} h</Typography>
-                                    <Typography variant="caption"><b>Inicio:</b> {item.startDate ? String(item.startDate).slice(0,10) : '-'}</Typography>
-                                    <Typography variant="caption"><b>Fin:</b> {item.endDate ? String(item.endDate).slice(0,10) : '-'}</Typography>
+                                    {item.estimatedHours != null && (
+                                      <Typography variant="caption"><b>Estimado:</b> {item.estimatedHours} h</Typography>
+                                    )}
+                                    {item.effortHours != null && (
+                                      <Typography variant="caption"><b>Tiempo Esfuerzo:</b> {item.effortHours} h</Typography>
+                                    )}
+                                    {item.startDate && (
+                                      <Typography variant="caption"><b>Inicio:</b> {String(item.startDate).slice(0,10)}</Typography>
+                                    )}
+                                    {item.endDate && (
+                                      <Typography variant="caption"><b>Fin:</b> {String(item.endDate).slice(0,10)}</Typography>
+                                    )}
                                   </Stack>
 
                                   {/* Acciones */}
@@ -410,7 +523,7 @@ function TaskList() {
                                       size="small"
                                       onClick={() => openEditDialog(item)}
                                       sx={{
-                                        bgcolor: '#313131',        // gris resaltado
+                                        bgcolor: '#313131',
                                         color: '#ffffff',
                                         '&:hover': { bgcolor: '#313131' },
                                         px: 1.25, py: 0.4, minHeight: 0, lineHeight: 1.15, fontSize: 12
@@ -418,8 +531,6 @@ function TaskList() {
                                     >
                                       Editar
                                     </Button>
-
-                                    {/* Solo ícono, centrado */}
                                     <IconButton
                                       aria-label="Eliminar"
                                       color="error"
@@ -445,13 +556,30 @@ function TaskList() {
         )}
       </Box>
 
-      {/* Diálogo Agregar tarea */}
+      {/* ========= Diálogo Agregar tarea ========= */}
       <Dialog open={openCreate} onClose={closeCreateDialog} fullWidth maxWidth="sm" component="form" onSubmit={handleCreate}>
         <DialogTitle sx={{ py: 1.25, fontSize: 18 }}>Nueva tarea</DialogTitle>
         <DialogContent dividers sx={{ py: 1.5 }}>
           <Stack spacing={1.25}>
             <TextField label="Título" name="title" value={form.title} onChange={handleCreateChange} required size="small" fullWidth />
             <TextField label="Descripción" name="description" value={form.description} onChange={handleCreateChange} multiline minRows={2} size="small" fullWidth />
+
+            {/* Seleccionar usuario */}
+            <TextField
+              select
+              label="Asignar a usuario"
+              name="assignedUserId"
+              value={String(form.assignedUserId ?? '')}
+              onChange={handleCreateChange}
+              size="small"
+              fullWidth
+            >
+              <MenuItem value="">Sin asignar</MenuItem>
+              {users.map(u => (
+                <MenuItem key={u.id} value={String(u.id)}>{u.fullName}</MenuItem>
+              ))}
+            </TextField>
+
             <Stack direction="row" spacing={1.25}>
               <TextField label="Horas estimadas" name="estimatedHours" value={form.estimatedHours} onChange={handleCreateChange} type="number" inputProps={{ step: '1', min: '0' }} size="small" fullWidth />
               <TextField label="Horas de esfuerzo" name="effortHours" value={form.effortHours} onChange={handleCreateChange} type="number" inputProps={{ step: '1', min: '0' }} size="small" fullWidth />
@@ -469,25 +597,36 @@ function TaskList() {
         </DialogContent>
         <DialogActions sx={{ py: 1 }}>
           <Button onClick={closeCreateDialog} size="small">Cancelar</Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={isInserting || !canSubmitCreate()}
-            size="small"
-            sx={{ bgcolor: '#F80000', '&:hover': { bgcolor: '#C00000' } }}
-          >
+          <Button type="submit" variant="contained" disabled={isInserting || !canSubmitCreate()} size="small" sx={{ bgcolor: '#F80000', '&:hover': { bgcolor: '#C00000' } }}>
             {isInserting ? 'Guardando…' : 'Guardar'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Diálogo Editar tarea */}
+      {/* ========= Diálogo Editar tarea ========= */}
       <Dialog open={openEdit} onClose={closeEditDialog} fullWidth maxWidth="sm" component="form" onSubmit={handleEdit}>
         <DialogTitle sx={{ py: 1.25, fontSize: 18 }}>Editar tarea</DialogTitle>
         <DialogContent dividers sx={{ py: 1.5 }}>
           <Stack spacing={1.25}>
             <TextField label="Título" name="title" value={editForm.title} onChange={handleEditChange} required size="small" fullWidth />
             <TextField label="Descripción" name="description" value={editForm.description} onChange={handleEditChange} multiline minRows={2} size="small" fullWidth />
+
+            {/* Seleccionar usuario */}
+            <TextField
+              select
+              label="Asignar a usuario"
+              name="assignedUserId"
+              value={String(editForm.assignedUserId ?? '')}
+              onChange={handleEditChange}
+              size="small"
+              fullWidth
+            >
+              <MenuItem value="">Sin asignar</MenuItem>
+              {users.map(u => (
+                <MenuItem key={u.id} value={String(u.id)}>{u.fullName}</MenuItem>
+              ))}
+            </TextField>
+
             <Stack direction="row" spacing={1.25}>
               <TextField label="Horas estimadas" name="estimatedHours" value={editForm.estimatedHours} onChange={handleEditChange} type="number" inputProps={{ step: '0.25', min: '0' }} size="small" fullWidth />
               <TextField label="Horas de esfuerzo" name="effortHours" value={editForm.effortHours} onChange={handleEditChange} type="number" inputProps={{ step: '0.25', min: '0' }} size="small" fullWidth />
