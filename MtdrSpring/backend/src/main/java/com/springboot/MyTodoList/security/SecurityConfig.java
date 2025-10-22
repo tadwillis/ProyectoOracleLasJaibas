@@ -41,7 +41,12 @@ public class SecurityConfig {
                         .permitAll())
                 .authorizeHttpRequests(auth -> auth
                         // 1️⃣ Recursos frontend públicos
-                        .requestMatchers("/", "/index.html", "/static/**", "/assets/**", "/register", "/favicon.ico").permitAll()
+                        .requestMatchers(
+                                "/", "/index.html",
+                                "/static/**", "/assets/**",
+                                "/img/**", "/css/**", "/js/**",
+                                "/register", "/favicon.ico"
+                        ).permitAll()
                         // 2️⃣ Rutas de autenticación
                         .requestMatchers("/api/auth/**").permitAll()
                         // 3️⃣ Rutas protegidas
@@ -58,6 +63,7 @@ public class SecurityConfig {
         http.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
