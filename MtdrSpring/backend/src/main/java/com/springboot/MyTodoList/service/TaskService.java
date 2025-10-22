@@ -66,7 +66,13 @@ public class TaskService {
     public List<Task> getTasksByUserAndStatus(Long userId, String status) {
         return taskRepository.findByAssignedToIdAndStatus(userId, status);
     }
-    
+
+    public List<Task> getTasksByAssignedUsername(String username) {
+        AppUser user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        return taskRepository.findByAssignedToId(user.getId());
+    }
+
     public Task updateTask(Long id, Task taskDetails) {
         Task task = taskRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Task not found"));

@@ -117,7 +117,7 @@ export default function TopBar() {
             <MenuItem onClick={() => { handleClose(); navigate('/dashboard'); }}>
               Mi Dashboard
             </MenuItem>
-            <MenuItem onClick={() => { handleClose(); navigate('/taskList'); }}>
+            <MenuItem onClick={() => { handleClose(); navigate('/myTasks'); }}>
               Mis Tareas
             </MenuItem>
             <Divider />

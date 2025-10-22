@@ -30,8 +30,8 @@ function Login() {
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem("token", data.token); // guardar el token JWT
-        localStorage.setItem("username", data.username);
+        localStorage.setItem("token", data["jwt-token"]); // guardar el token JWT
+        localStorage.setItem("username", formData.username);
         setServerMessage("✅ Login exitoso, redirigiendo...");
         setTimeout(() => navigate("/taskList"), 1500);
       } else {
@@ -49,7 +49,7 @@ function Login() {
         sx={{ p: 4, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         <Box display="flex" alignItems="center" mb={2}>
           <img
-            src="https://upload.wikimedia.org/wikipedia/commons/c/cb/Oracle_logo.svg"
+            src="/../../public/img/Oracle-Symbol.png"
             alt="logo"
             style={{ width: 50, marginRight: 10 }}
           />

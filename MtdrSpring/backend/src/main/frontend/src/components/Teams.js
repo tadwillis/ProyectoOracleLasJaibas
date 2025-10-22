@@ -101,8 +101,9 @@ function Teams() {
     setLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/teams`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar equipos');
       const data = await res.json();
@@ -118,8 +119,9 @@ function Teams() {
   // Load all users
   const loadUsers = async () => {
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/users`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar usuarios');
       const data = await res.json();
@@ -132,8 +134,9 @@ function Teams() {
   // Load team members
   const loadTeamMembers = async (teamId) => {
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/team-members/team/${teamId}`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar miembros del equipo');
       const data = await res.json();
@@ -159,11 +162,12 @@ function Teams() {
         description: form.description
       };
 
+      const token = localStorage.getItem("token");
       const res = await fetch(
         `${API_BASE}/teams?createdBy=${userId}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
           body: JSON.stringify(payload)
         }
       );
@@ -196,9 +200,10 @@ function Teams() {
         description: form.description
       };
 
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/teams/${editingTeam.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
 
@@ -220,8 +225,10 @@ function Teams() {
     if (!window.confirm('¿Estás seguro de eliminar este equipo? Esto eliminará todos los proyectos, sprints y tareas asociados.')) return;
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/teams/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { "Authorization": `Bearer ${token}` }
       });
 
       if (!res.ok) throw new Error('Error al eliminar equipo');
@@ -242,10 +249,12 @@ function Teams() {
     }
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(
         `${API_BASE}/team-members?teamId=${selectedTeamForMember.id}&userId=${memberForm.userId}&role=${memberForm.role}`,
         {
-          method: 'POST'
+          method: 'POST',
+          headers: { "Authorization": `Bearer ${token}` }
         }
       );
 
@@ -269,10 +278,12 @@ function Teams() {
     if (!window.confirm('¿Estás seguro de remover este miembro del equipo?')) return;
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(
         `${API_BASE}/team-members?teamId=${teamId}&userId=${userId}`,
         {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: { "Authorization": `Bearer ${token}` }
         }
       );
 
@@ -289,10 +300,12 @@ function Teams() {
   // Update member role
   const handleUpdateMemberRole = async (teamId, userId, newRole) => {
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(
         `${API_BASE}/team-members?teamId=${teamId}&userId=${userId}&role=${newRole}`,
         {
-          method: 'PATCH'
+          method: 'PATCH',
+          headers: { "Authorization": `Bearer ${token}` }
         }
       );
 

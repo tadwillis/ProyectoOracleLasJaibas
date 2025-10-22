@@ -96,8 +96,9 @@ function Sprints() {
   // Load projects
   const loadProjects = async () => {
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/projects`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar proyectos');
       const data = await res.json();
@@ -113,8 +114,9 @@ function Sprints() {
     setLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/sprints`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar sprints');
       const data = await res.json();
@@ -132,8 +134,9 @@ function Sprints() {
     setLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/sprints/project/${projectId}`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar sprints del proyecto');
       const data = await res.json();
@@ -151,8 +154,9 @@ function Sprints() {
     setLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/sprints/status/${status}`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar sprints por estado');
       const data = await res.json();
@@ -219,11 +223,12 @@ function Sprints() {
         status: form.status
       };
 
+      const token = localStorage.getItem("token");
       const res = await fetch(
         `${API_BASE}/sprints?projectId=${form.projectId}&createdBy=${userId}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
           body: JSON.stringify(payload)
         }
       );
@@ -269,9 +274,10 @@ function Sprints() {
         status: form.status
       };
 
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/sprints/${editingSprint.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
 
@@ -293,8 +299,10 @@ function Sprints() {
     if (!window.confirm('¿Estás seguro de eliminar este sprint?')) return;
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/sprints/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { "Authorization": `Bearer ${token}` }
       });
 
       if (!res.ok) throw new Error('Error al eliminar sprint');
@@ -310,8 +318,10 @@ function Sprints() {
   // Update sprint status
   const handleUpdateSprintStatus = async (id, newStatus) => {
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/sprints/${id}/status?status=${newStatus}`, {
-        method: 'PATCH'
+        method: 'PATCH',
+        headers: { "Authorization": `Bearer ${token}` }
       });
 
       if (!res.ok) throw new Error('Error al actualizar estado del sprint');

@@ -70,8 +70,9 @@ function Projects() {
   // Load teams
   const loadTeams = async () => {
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/teams`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar equipos');
       const data = await res.json();
@@ -87,8 +88,9 @@ function Projects() {
     setLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/projects`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar proyectos');
       const data = await res.json();
@@ -104,8 +106,9 @@ function Projects() {
   // Load sprints
   const loadSprints = async () => {
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/sprints`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar sprints');
       const data = await res.json();
@@ -120,8 +123,9 @@ function Projects() {
     setLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/projects/team/${teamId}`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar proyectos del equipo');
       const data = await res.json();
@@ -163,11 +167,12 @@ function Projects() {
         description: form.description
       };
 
+      const token = localStorage.getItem("token");
       const res = await fetch(
         `${API_BASE}/projects?teamId=${form.teamId}&createdBy=${userId}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
           body: JSON.stringify(payload)
         }
       );
@@ -200,9 +205,10 @@ function Projects() {
         description: form.description
       };
 
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/projects/${editingProject.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
 
@@ -224,8 +230,10 @@ function Projects() {
     if (!window.confirm('¿Estás seguro de eliminar este proyecto? Esto eliminará todos los sprints asociados.')) return;
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/projects/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { "Authorization": `Bearer ${token}` }
       });
 
       if (!res.ok) throw new Error('Error al eliminar proyecto');

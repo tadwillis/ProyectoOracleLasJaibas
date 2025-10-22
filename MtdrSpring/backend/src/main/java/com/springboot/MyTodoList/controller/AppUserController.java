@@ -2,9 +2,12 @@ package com.springboot.MyTodoList.controller;
 
 import com.springboot.MyTodoList.model.AppUser;
 import com.springboot.MyTodoList.service.AppUserService;
+import com.springboot.MyTodoList.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +18,9 @@ import java.util.List;
 public class AppUserController {
     
     private final AppUserService userService;
+
+    @Autowired
+    private AppUserRepository userRepository;
     
     @PostMapping
     public ResponseEntity<AppUser> createUser(@RequestBody AppUser user) {
@@ -24,6 +30,13 @@ public class AppUserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @GetMapping("/info")
+    public AppUser getUserDetails(){
+        String userName = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        return userRepository.findByUsername(userName).get();
     }
     
     @GetMapping("/{id}")

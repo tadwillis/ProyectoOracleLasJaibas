@@ -1,4 +1,4 @@
-// TaskList.js
+// MyTasks.js
 import React, { useState, useEffect } from 'react';
 import API_LIST from '../API';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -54,7 +54,7 @@ const heroSx = {
 };
 
 // ===================== Componente =====================
-function TaskList() {
+function MyTasks() {
   const [isLoading, setLoading] = useState(false);
   const [isInserting, setInserting] = useState(false);
   const [items, setItems] = useState([]);
@@ -111,7 +111,8 @@ function TaskList() {
     setLoading(true); setError(undefined);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_LIST}`, {
+      const username = localStorage.getItem('username') || 'Usuario';
+      const res = await fetch(`${API_LIST}/username/${username}`, {
         headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` },
         cache: 'no-store',
         credentials: 'same-origin'
@@ -403,7 +404,7 @@ function TaskList() {
             variant="h5"
             sx={{ fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.35)' }}
           >
-            Tablero de Tareas
+            Mis Tareas
           </Typography>
 
           <Button
@@ -657,4 +658,4 @@ function TaskList() {
   );
 }
 
-export default TaskList;
+export default MyTasks;

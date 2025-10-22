@@ -66,6 +66,11 @@ public class TaskController {
         return ResponseEntity.ok(taskService.getTasksByUserAndStatus(userId, status));
     }
 
+    @GetMapping("/username/{username}")
+    public ResponseEntity<List<Task>> getTasksByAssignedUsername(@PathVariable String username) {
+        return ResponseEntity.ok(taskService.getTasksByAssignedUsername(username));
+    }
+
     @GetMapping("/kpi/hours")
     public ResponseEntity<Map<String, Double>> getKpiHours() {
         return ResponseEntity.ok(taskService.getKpiTotals());

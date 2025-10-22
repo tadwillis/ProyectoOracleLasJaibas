@@ -95,8 +95,9 @@ function UserStories() {
   // Load teams
   const loadTeams = async () => {
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/teams`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar equipos');
       const data = await res.json();
@@ -112,8 +113,9 @@ function UserStories() {
     setLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/stories`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar user stories');
       const data = await res.json();
@@ -131,8 +133,9 @@ function UserStories() {
     setLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/stories/team/${teamId}`, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar user stories del equipo');
       const data = await res.json();
@@ -179,11 +182,12 @@ function UserStories() {
         status: form.status
       };
 
+      const token = localStorage.getItem("token");
       const res = await fetch(
         `${API_BASE}/stories?teamId=${form.teamId}&createdBy=${userId}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
           body: JSON.stringify(payload)
         }
       );
@@ -220,9 +224,10 @@ function UserStories() {
         status: form.status
       };
 
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/stories/${editingStory.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
 
@@ -244,8 +249,10 @@ function UserStories() {
     if (!window.confirm('¿Estás seguro de eliminar esta user story?')) return;
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/stories/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { "Authorization": `Bearer ${token}` }
       });
 
       if (!res.ok) throw new Error('Error al eliminar user story');
