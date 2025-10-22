@@ -41,10 +41,13 @@ const TEAM_ID_DEFAULT  = 1;
 const STORY_ID_DEFAULT = 1;
 
 // ======= Banner =======
-const BANNER_SRC = "/../../img/banner-top.png";
+const BANNER_SRC = "/img/banner-top.png";
 const heroSx = {
   position: 'relative',
-  left: '50%', right: '50%', ml: '-50vw', mr: '-50vw',
+  left: '50%',
+  right: '50%',
+  ml: '-50vw',
+  mr: '-50vw',
   width: '100vw',
   backgroundImage: `url(${BANNER_SRC})`,
   backgroundRepeat: 'no-repeat',
@@ -137,7 +140,6 @@ function TaskList() {
           (assignedUserId != null
             ? {
                 id: Number(assignedUserId),
-                // intenta poblar nombre si viene en otra propiedad alternativa
                 fullName: t.assignedTo?.fullName ?? t.assignedUserName ?? null
               }
             : null);
@@ -182,7 +184,7 @@ function TaskList() {
       startDate: normDate(form.startDate),
       endDate: normDate(form.endDate),
 
-      // Mandamos variantes; crear ya funcionaba, pero mantenemos consistencia
+
       assignedTo: assignedId ? { id: assignedId } : null,
       assignedUserId: assignedId,
       ASSIGNED_USER_ID: assignedId
@@ -237,7 +239,7 @@ function TaskList() {
                  {0:'bajo',1:'medio',2:'alto'}[Number(task.priority)] : 'bajo'),
       startDate: task.startDate ? String(task.startDate).slice(0,10) : '',
       endDate:   task.endDate   ? String(task.endDate).slice(0,10)   : '',
-      assignedUserId: task.assignedTo?.id ?? task.ASSIGNED_USER_ID ?? '' // robusto
+      assignedUserId: task.assignedTo?.id ?? task.ASSIGNED_USER_ID ?? ''
     });
     setOpenEdit(true);
   };
