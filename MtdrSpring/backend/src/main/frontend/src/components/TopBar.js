@@ -12,7 +12,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 const ORACLE_LOGO = '/img/Oracle-Symbol.png';
 
 const links = [
-  { to: '/',           label: 'Inicio' },
+  { to: '/Inicio',           label: 'Inicio' },
   { to: '/dashboard',  label: 'Dashboard' },
   { to: '/stories',    label: 'User Stories' },
   { to: '/sprints',    label: 'Sprints' },
