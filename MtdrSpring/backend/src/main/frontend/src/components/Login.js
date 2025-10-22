@@ -49,7 +49,7 @@ function Login() {
         sx={{ p: 4, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         <Box display="flex" alignItems="center" mb={2}>
           <img
-            src="/../../public/img/Oracle-Symbol.png"
+            src="/img/Oracle-Symbol.png"
             alt="logo"
             style={{ width: 50, marginRight: 10 }}
           />
