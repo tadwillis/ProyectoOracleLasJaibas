@@ -1,4 +1,4 @@
-// TaskList.js
+// Dashboard.js
 import React, { useState, useEffect } from 'react';
 
 import {
@@ -22,13 +22,52 @@ const heroSx = {
 
 
 function Dashboard() {
-    const [kpi, setKpi] = useState(null);
+    const [kpiHours, setKpiHours] = useState();
+    const [kpiTasks, setKpiTasks] = useState();
+    const [user, setUser] = useState()
+    const username = localStorage.getItem('username') || 'Usuario';
+
+    async function loadUser() {
+        try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`/api/users/username/${username}`, { headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` } });
+        if (!res.ok) throw new Error('Error al obtener el usuario');
+        const data = await res.json();
+        console.log(data);
+        setUser(data);
+        } catch (e) {
+        console.error('Error usuarios:', e);
+        }
+    }
+
+    async function loadKPIUserHours() {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`/api/tasks/kpiUser/hours/${username}`, { headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` } });
+            if (!res.ok) throw new Error('Error al obtener el KPI');
+            const data = await res.json();
+            setKpiHours(data);
+        } catch (e) {
+        console.error('Error al cargar KPI:', e);
+        }
+    }
+
+    async function loadKPIUserTasks() {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`/api/tasks/kpiUser/tasks/${username}`, { headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` } });
+            if (!res.ok) throw new Error('Error al obtener el KPI');
+            const data = await res.json();
+            setKpiTasks(data);
+        } catch (e) {
+        console.error('Error al cargar KPI:', e);
+        }
+    }
 
     useEffect(() => {
-    fetch("/api/tasks/kpi/hours")
-        .then((res) => res.json())
-        .then((data) => setKpi(data))
-        .catch((err) => console.error("Error al cargar KPI:", err));
+        loadKPIUserHours(); 
+        loadKPIUserTasks();
+        loadUser();
     }, []);
     
     return (
@@ -85,13 +124,18 @@ function Dashboard() {
                         mb: 2,
                     }}
                     >
-                    SM
+                    {user?.fullName ? user.fullName.charAt(0).toUpperCase() : '?'}
                     </Avatar>
-                    <Typography variant="subtitle1" align="center" sx={{ fontWeight: 600 }}>
-                    Santiago Alonso
-                    <br />
-                    Mendoza Franco
-                    </Typography>
+                    
+                    {user ? (
+                        <Typography variant="subtitle1" align="center" sx={{ fontWeight: 600 }}>
+                            {user.fullName}
+                        </Typography>
+                    ) : (
+                        <Typography variant="subtitle1" align="center" sx={{ fontWeight: 600 }}>
+                            Cargando...
+                        </Typography>
+                    )}
                 </Paper>
                 </Grid>
 
@@ -101,57 +145,66 @@ function Dashboard() {
                     {/* --- Progreso e historial --- */}
                     <Grid item xs={12} md={6} lg={3}>
                     <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-                        Progreso e Historial
+                        KPI de Desempeño en Tareas
                     </Typography>
                     <Typography variant="subtitle1" sx={{ mt: 1, mb: 2 }}>
-                        Mira tu recorrido
+                        Comparativa de tareas planeadas vs terminadas
                     </Typography>
-                    <Typography variant="body2">
-                        <b>8</b> Horas, <b>1</b> Proyecto, <b>2</b> Tareas
-                    </Typography>
-                    <Box sx={{ mt: 3 }}>
-                        {[
-                        { name: "Autenticación segura", value: 100 },
-                        { name: "Activar notificaciones de Telegram", value: 100 },
-                        { name: "Parámetro de tiempo invertido", value: 100 },
-                        { name: "Métricas de productividad", value: 25 },
-                        ].map((task, i) => (
-                        <Box key={i} sx={{ mb: 2 }}>
-                            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                            {task.name}
-                            </Typography>
+
+                    {kpiTasks ? (
+                        <Box sx={{ mt: 2 }}>
+                        <Typography variant="body2">
+                            <b>Total planeadas:</b> {kpiTasks.totalPlannedTasks} tareas
+                        </Typography>
+                        <Typography variant="body2">
+                            <b>Total terminadas:</b> {kpiTasks.totalDoneTasks} tareas
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 1 }}>
+                            <b>Eficiencia:</b>{" "}
+                            <Chip
+                            label={`${kpiTasks.efficiency.toFixed(1)}%`}
+                            color={kpiTasks.efficiency >= 100 ? "success" : "warning"}
+                            sx={{ fontWeight: "bold" }}
+                            />
+                        </Typography>
+
+                        <Box sx={{ mt: 2 }}>
                             <LinearProgress
                             variant="determinate"
-                            value={task.value}
-                            sx={{ height: 6, borderRadius: 2, mt: 0.5 }}
+                            value={Math.min(kpiTasks.efficiency, 100)}
+                            sx={{ height: 8, borderRadius: 2 }}
                             />
                         </Box>
-                        ))}
-                    </Box>
+                        </Box>
+                    ) : (
+                        <Typography variant="body2" sx={{ mt: 2 }}>
+                        Cargando KPI...
+                        </Typography>
+                    )}
                     </Grid>
 
                     {/* --- Distinciones --- */}
                     <Grid item xs={12} md={6} lg={3}>
                         <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-                            KPI de Desempeño
+                            KPI de Desempeño en Horas
                         </Typography>
                         <Typography variant="subtitle1" sx={{ mt: 1 }}>
                             Comparativa de horas estimadas vs reales
                         </Typography>
 
-                        {kpi ? (
+                        {kpiHours ? (
                             <Box sx={{ mt: 2 }}>
                             <Typography variant="body2">
-                                <b>Total estimado:</b> {kpi.totalEstimatedHours.toFixed(2)} h
+                                <b>Total estimado:</b> {kpiHours.totalEstimatedHours.toFixed(2)} h
                             </Typography>
                             <Typography variant="body2">
-                                <b>Total real:</b> {kpi.totalEffortHours.toFixed(2)} h
+                                <b>Total real:</b> {kpiHours.totalEffortHours.toFixed(2)} h
                             </Typography>
                             <Typography variant="body2" sx={{ mt: 1 }}>
                                 <b>Eficiencia:</b>{" "}
                                 <Chip
-                                label={`${kpi.efficiency.toFixed(1)}%`}
-                                color={kpi.efficiency >= 100 ? "success" : "warning"}
+                                label={`${kpiHours.efficiency.toFixed(1)}%`}
+                                color={kpiHours.efficiency >= 100 ? "warning" : "success"}
                                 sx={{ fontWeight: "bold" }}
                                 />
                             </Typography>
@@ -159,7 +212,7 @@ function Dashboard() {
                             <Box sx={{ mt: 2 }}>
                                 <LinearProgress
                                 variant="determinate"
-                                value={Math.min(kpi.efficiency, 100)}
+                                value={Math.min(kpiHours.efficiency, 100)}
                                 sx={{ height: 8, borderRadius: 2 }}
                                 />
                             </Box>
