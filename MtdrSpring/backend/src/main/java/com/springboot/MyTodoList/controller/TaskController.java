@@ -75,6 +75,16 @@ public class TaskController {
     public ResponseEntity<Map<String, Double>> getKpiHours() {
         return ResponseEntity.ok(taskService.getKpiTotals());
     }
+
+    @GetMapping("/kpiUser/hours/{username}")
+    public ResponseEntity<Map<String, Double>> getKpiUserHours(@PathVariable String username) {
+        return ResponseEntity.ok(taskService.getKpiUserHours(username));
+    }
+
+    @GetMapping("/kpiUser/tasks/{username}")
+    public ResponseEntity<Map<String, Integer>> getKpiUserTasks(@PathVariable String username) {
+        return ResponseEntity.ok(taskService.getKpiUserTasks(username));
+    }
     
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task task) {

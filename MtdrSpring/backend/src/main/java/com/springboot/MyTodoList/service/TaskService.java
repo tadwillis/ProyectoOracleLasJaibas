@@ -118,6 +118,49 @@ public class TaskService {
         taskRepository.deleteById(id);
     }
 
+    public Map<String, Double> getKpiUserHours(String username) {
+        List<Task> tasks = getTasksByAssignedUsername(username);
+
+        double totalEstimated = tasks.stream()
+            .filter(t -> t.getEstimatedHours() != null)
+            .mapToDouble(Task::getEstimatedHours)
+            .sum();
+
+        double totalEffort = tasks.stream()
+            .filter(t -> t.getEffortHours() != null)
+            .mapToDouble(Task::getEffortHours)
+            .sum();
+
+        Map<String, Double> kpi = new HashMap<>();
+        kpi.put("totalEstimatedHours", totalEstimated);
+        kpi.put("totalEffortHours", totalEffort);
+        kpi.put("efficiency", totalEstimated == 0 ? 0 : (totalEffort / totalEstimated) * 100);
+
+        return kpi;
+    }
+
+    public Map<String, Integer> getKpiUserTasks(String username) {
+        List<Task> tasks = getTasksByAssignedUsername(username);
+
+        int totalPlanned = (int) Math.min(tasks.stream()
+            .filter(t -> t.getStatus() != "cancelled")
+            .count(), 
+            Integer.MAX_VALUE
+        );
+        int totalDone = (int) Math.min(tasks.stream()
+            .filter(t -> t.getStatus() == "done")
+            .count(), 
+            Integer.MAX_VALUE
+        );
+
+        Map<String, Integer> kpi = new HashMap<>();
+        kpi.put("totalPlannedTasks", totalPlanned);
+        kpi.put("totalDoneTasks", totalDone);
+        kpi.put("efficiency", totalPlanned == 0 ? 0 : (totalDone / totalPlanned) * 100);
+
+        return kpi;
+    }
+    
     public Map<String, Double> getKpiTotals() {
         List<Task> tasks = taskRepository.findAll();
 
