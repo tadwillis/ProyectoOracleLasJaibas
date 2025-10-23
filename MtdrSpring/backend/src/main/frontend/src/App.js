@@ -10,7 +10,7 @@ import Sprints from "./components/Sprints";
 import Projects from "./components/Projects";
 import Teams from "./components/Teams";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Inicio from "./components/Inicio"; // ✅ agregado
+import Inicio from "./components/Inicio";
 
 function App() {
   return (
@@ -24,7 +24,7 @@ function App() {
         <Route
           path="/Inicio"
           element={
-            <ProtectedRoute>       {/* ✅ protegida igual que las demás */}
+            <ProtectedRoute>       
               <Inicio />
             </ProtectedRoute>
           }

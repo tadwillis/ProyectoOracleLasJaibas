@@ -61,12 +61,13 @@ function MyTasks() {
   const [isInserting, setInserting] = useState(false);
   const [items, setItems] = useState([]);
   const [users, setUsers] = useState([]);
+  const [sprints, setSprints] = useState([]);
   const [error, setError] = useState();
 
   const [openCreate, setOpenCreate] = useState(false);
   const [form, setForm] = useState({
     title: '', description: '', estimatedHours: '', effortHours: '',
-    priority: 'bajo', startDate: '', endDate: '', assignedUserId: ''
+    priority: 'bajo', startDate: '', endDate: '', assignedUserId: '',sprintId: ''
   });
 
   const [openEdit, setOpenEdit] = useState(false);
@@ -74,11 +75,11 @@ function MyTasks() {
   const [editStatus, setEditStatus] = useState('todo');
   const [editForm, setEditForm] = useState({
     title: '', description: '', estimatedHours: '', effortHours: '',
-    priority: 'bajo', startDate: '', endDate: '', assignedUserId: ''
+    priority: 'bajo', startDate: '', endDate: '', assignedUserId: '',sprintId: ''
   });
 
   // ======== Cargar ========
-  useEffect(() => { loadTasks(); loadUsers(); }, []);
+  useEffect(() => { loadTasks(); loadUsers(); loadSprints();}, []);
 
   async function loadUsers() {
     try {
@@ -115,6 +116,16 @@ function MyTasks() {
     } catch (e) { setError(e); } finally { setLoading(false); }
   }
 
+  async function loadSprints() {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch('/api/sprints', { headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Error al obtener sprints');
+      const data = await res.json();
+      setSprints(Array.isArray(data) ? data : []);
+    } catch (e) { console.error('Error sprints:', e); }
+  }
+
   // ========= Crear =========
   const canSubmitCreate = () => form.title.trim() !== '';
   const openCreateDialog = () => setOpenCreate(true);
@@ -127,6 +138,8 @@ function MyTasks() {
     setInserting(true);
     try {
       const assignedId = form.assignedUserId === '' ? null : Number(form.assignedUserId);
+      const sprintId = form.sprintId === '' ? null : Number(form.sprintId);
+
       const body = {
         title: form.title.trim(),
         description: form.description.trim(),
@@ -138,6 +151,7 @@ function MyTasks() {
         endDate: normDate(form.endDate),
         assignedTo: assignedId ? { id: assignedId } : null,
         assignedUserId: assignedId,
+        sprint: sprintId ? { id: sprintId } : null,
         ASSIGNED_USER_ID: assignedId
       };
       const qs = new URLSearchParams({ storyId: String(STORY_ID_DEFAULT), teamId: String(TEAM_ID_DEFAULT) }).toString();
@@ -150,7 +164,7 @@ function MyTasks() {
       if (!res.ok) throw new Error('Error al crear tarea');
       await loadTasks();
       closeCreateDialog();
-      setForm({ title: '', description: '', estimatedHours: '', effortHours: '', priority: 'bajo', startDate: '', endDate: '', assignedUserId: '' });
+      setForm({ title: '', description: '', estimatedHours: '', effortHours: '', priority: 'bajo', startDate: '', endDate: '', assignedUserId: '', sprintId: '' });
     } catch (e) { console.error(e); setError(e); } finally { setInserting(false); }
   }
 
@@ -164,7 +178,7 @@ function MyTasks() {
       priority: (['0', '1', '2'].includes(String(task.priority)) ? { 0: 'bajo', 1: 'medio', 2: 'alto' }[Number(task.priority)] : 'bajo'),
       startDate: task.startDate ? String(task.startDate).slice(0, 10) : '',
       endDate: task.endDate ? String(task.endDate).slice(0, 10) : '',
-      assignedUserId: task.assignedTo?.id ?? task.ASSIGNED_USER_ID ?? ''
+      assignedUserId: task.assignedTo?.id ?? task.ASSIGNED_USER_ID ?? '',sprintId: task.sprint?.id ?? ''
     });
     setOpenEdit(true);
   };
@@ -174,6 +188,8 @@ function MyTasks() {
   async function handleEdit(e) {
     e.preventDefault();
     const assignedId = editForm.assignedUserId === '' ? null : Number(editForm.assignedUserId);
+    const sprintId = editForm.sprintId === '' ? null : Number(editForm.sprintId);
+    
     try {
       const body = {
         title: editForm.title.trim(),
@@ -186,7 +202,8 @@ function MyTasks() {
         endDate: normDate(editForm.endDate),
         assignedTo: assignedId ? { id: assignedId } : null,
         assignedUserId: assignedId,
-        ASSIGNED_USER_ID: assignedId
+        ASSIGNED_USER_ID: assignedId,
+        sprint: sprintId ? { id: sprintId } : null,
       };
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_LIST}/${editId}`, {
@@ -312,6 +329,13 @@ function MyTasks() {
                                     </Typography>
                                   )}
 
+                                  {/* Sprint asignado */}
+                                  {item.sprint?.name && (
+                                    <Typography variant="caption" sx={{ display: 'block', mb: 0.3 }}>
+                                      <b>Sprint:</b> {item.sprint.name}
+                                    </Typography>
+                                  )}
+
                                   <Stack spacing={0.25}>
                                     {item.estimatedHours && (
                                       <Typography variant="caption"><b>Estimado:</b> {item.estimatedHours} h</Typography>
@@ -362,7 +386,7 @@ function MyTasks() {
         </Box>
       </Box>
 
-      {/* ========= Diálogo Crear ========= */}
+      {/* ========= Diálogo Agregar tarea ========= */}
       <Dialog open={openCreate} onClose={closeCreateDialog} fullWidth maxWidth="sm" component="form" onSubmit={handleCreate}>
         <DialogTitle sx={{ fontWeight: 700, fontSize: 20, display: 'flex', alignItems: 'center', gap: 1, pb: 0 }}>
           📝 Crear Nueva Tarea
@@ -384,12 +408,26 @@ function MyTasks() {
               >
                 <MenuItem value="">Sin asignar</MenuItem>
                 {users.map(u => (
-                  <MenuItem key={u.id} value={String(u.id)}>
-                    {u.fullName}
-                  </MenuItem>
+                  <MenuItem key={u.id} value={String(u.id)}>{u.fullName}</MenuItem>
                 ))}
               </TextField>
 
+              {/* 👇 Nuevo campo Sprint */}
+              <TextField
+                select
+                label="Sprint"
+                name="sprintId"
+                value={String(form.sprintId ?? '')}
+                onChange={handleCreateChange}
+                fullWidth
+              >
+                <MenuItem value="">Sin sprint</MenuItem>
+                {sprints.map(s => (
+                  <MenuItem key={s.id} value={String(s.id)}>{s.name}</MenuItem>
+                ))}
+              </TextField>
+
+              {/* ... resto sin tocar ... */}
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -401,6 +439,7 @@ function MyTasks() {
                     fullWidth
                   />
                 </Grid>
+
                 <Grid item xs={12} sm={6}>
                   <TextField
                     label="Horas de esfuerzo"
@@ -411,6 +450,7 @@ function MyTasks() {
                     fullWidth
                   />
                 </Grid>
+
                 <Grid item xs={12}>
                   <Stack direction="row" spacing={2}>
                     <TextField
@@ -425,6 +465,7 @@ function MyTasks() {
                       <MenuItem value="medio">Media</MenuItem>
                       <MenuItem value="alto">Alta</MenuItem>
                     </TextField>
+
                     <TextField
                       label="Fecha de inicio"
                       name="startDate"
@@ -434,6 +475,7 @@ function MyTasks() {
                       InputLabelProps={{ shrink: true }}
                       fullWidth
                     />
+
                     <TextField
                       label="Fecha de fin"
                       name="endDate"
@@ -450,9 +492,7 @@ function MyTasks() {
           </Paper>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={closeCreateDialog} sx={{ color: '#757575', textTransform: 'none' }}>
-            Cancelar
-          </Button>
+          <Button onClick={closeCreateDialog} sx={{ color: '#757575', textTransform: 'none' }}>Cancelar</Button>
           <Button
             type="submit"
             variant="contained"
@@ -526,6 +566,22 @@ function MyTasks() {
                 {users.map(u => (
                   <MenuItem key={u.id} value={String(u.id)}>
                     {u.fullName}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                select
+                label="Sprint"
+                name="sprintId"
+                value={String(editForm.sprintId ?? '')}
+                onChange={handleEditChange}
+                fullWidth
+              >
+                <MenuItem value="">Sin sprint</MenuItem>
+                {sprints.map(s => (
+                  <MenuItem key={s.id} value={String(s.id)}>
+                    {s.name}
                   </MenuItem>
                 ))}
               </TextField>

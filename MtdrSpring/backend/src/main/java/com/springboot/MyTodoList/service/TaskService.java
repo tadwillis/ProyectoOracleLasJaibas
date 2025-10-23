@@ -1,81 +1,82 @@
 package com.springboot.MyTodoList.service;
 
-import com.springboot.MyTodoList.model.AppUser;
-import com.springboot.MyTodoList.model.Task;
-import com.springboot.MyTodoList.model.Team;
-import com.springboot.MyTodoList.model.UserStory;
-import com.springboot.MyTodoList.repository.AppUserRepository;
-import com.springboot.MyTodoList.repository.TaskRepository;
-import com.springboot.MyTodoList.repository.TeamRepository;
-import com.springboot.MyTodoList.repository.UserStoryRepository;
+import com.springboot.MyTodoList.model.*;
+import com.springboot.MyTodoList.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class TaskService {
-    
+
     private final TaskRepository taskRepository;
     private final UserStoryRepository storyRepository;
     private final TeamRepository teamRepository;
     private final AppUserRepository userRepository;
-    
+    private final SprintRepository sprintRepository; // 👈 agregado
+
     public Task createTask(Task task, Long storyId, Long teamId) {
         UserStory story = storyRepository.findById(storyId)
-            .orElseThrow(() -> new RuntimeException("Story not found"));
+                .orElseThrow(() -> new RuntimeException("Story not found"));
         Team team = teamRepository.findById(teamId)
-            .orElseThrow(() -> new RuntimeException("Team not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Team not found"));
+
         task.setUserStory(story);
         task.setTeam(team);
-        
+
+        // 👇 Asignar sprint si viene en el JSON
+        if (task.getSprint() != null && task.getSprint().getId() != null) {
+            Sprint sprint = sprintRepository.findById(task.getSprint().getId())
+                    .orElseThrow(() -> new RuntimeException("Sprint not found"));
+            task.setSprint(sprint);
+        } else {
+            task.setSprint(null);
+        }
+
         return taskRepository.save(task);
     }
-    
+
     public Optional<Task> getTaskById(Long id) {
         return taskRepository.findById(id);
     }
-    
+
     public List<Task> getAllTasks() {
         return taskRepository.findAll();
     }
-    
+
     public List<Task> getTasksByStory(Long storyId) {
         return taskRepository.findByUserStoryId(storyId);
     }
-    
+
     public List<Task> getTasksBySprint(Long sprintId) {
         return taskRepository.findBySprintId(sprintId);
     }
-    
+
     public List<Task> getTasksByTeam(Long teamId) {
         return taskRepository.findByTeamId(teamId);
     }
-    
+
     public List<Task> getTasksByAssignedUser(Long userId) {
         return taskRepository.findByAssignedToId(userId);
     }
-    
+
     public List<Task> getTasksByUserAndStatus(Long userId, String status) {
         return taskRepository.findByAssignedToIdAndStatus(userId, status);
     }
 
     public List<Task> getTasksByAssignedUsername(String username) {
         AppUser user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
         return taskRepository.findByAssignedToId(user.getId());
     }
 
     public Task updateTask(Long id, Task taskDetails) {
         Task task = taskRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new RuntimeException("Task not found"));
 
         task.setTitle(taskDetails.getTitle());
         task.setDescription(taskDetails.getDescription());
@@ -84,8 +85,18 @@ public class TaskService {
         task.setPriority(taskDetails.getPriority());
         task.setStartDate(taskDetails.getStartDate());
         task.setEndDate(taskDetails.getEndDate());
+        task.setEstimatedHours(taskDetails.getEstimatedHours());
 
-        //actualiza el usuario asignado si se manda en el JSON
+        // 👇 Nuevo: actualizar sprint si viene en el JSON
+        if (taskDetails.getSprint() != null && taskDetails.getSprint().getId() != null) {
+            Sprint sprint = sprintRepository.findById(taskDetails.getSprint().getId())
+                    .orElseThrow(() -> new RuntimeException("Sprint not found"));
+            task.setSprint(sprint);
+        } else {
+            task.setSprint(null);
+        }
+
+        // Mantener el comportamiento previo de usuario asignado
         if (taskDetails.getAssignedTo() != null) {
             task.setAssignedTo(taskDetails.getAssignedTo());
         } else {
@@ -95,41 +106,41 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
-    
     public Task assignTask(Long taskId, Long userId) {
         Task task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new RuntimeException("Task not found"));
         AppUser user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         task.setAssignedTo(user);
         return taskRepository.save(task);
     }
-    
+
     public Task updateTaskStatus(Long id, String newStatus) {
         Task task = taskRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Task not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
         task.setStatus(newStatus);
         return taskRepository.save(task);
     }
-    
+
     public void deleteTask(Long id) {
         taskRepository.deleteById(id);
     }
 
+    // 👇 Métodos KPI sin cambios
     public Map<String, Double> getKpiUserHours(String username) {
         List<Task> tasks = getTasksByAssignedUsername(username);
 
         double totalEstimated = tasks.stream()
-            .filter(t -> t.getEstimatedHours() != null)
-            .mapToDouble(Task::getEstimatedHours)
-            .sum();
+                .filter(t -> t.getEstimatedHours() != null)
+                .mapToDouble(Task::getEstimatedHours)
+                .sum();
 
         double totalEffort = tasks.stream()
-            .filter(t -> t.getEffortHours() != null)
-            .mapToDouble(Task::getEffortHours)
-            .sum();
+                .filter(t -> t.getEffortHours() != null)
+                .mapToDouble(Task::getEffortHours)
+                .sum();
 
         Map<String, Double> kpi = new HashMap<>();
         kpi.put("totalEstimatedHours", totalEstimated);
@@ -143,15 +154,12 @@ public class TaskService {
         List<Task> tasks = getTasksByAssignedUsername(username);
 
         int totalPlanned = (int) Math.min(tasks.stream()
-            .filter(t -> t.getStatus() != "cancelled")
-            .count(), 
-            Integer.MAX_VALUE
-        );
+                .filter(t -> !t.getStatus().equals("cancelled"))
+                .count(), Integer.MAX_VALUE);
+
         int totalDone = (int) Math.min(tasks.stream()
-            .filter(t -> t.getStatus() == "done")
-            .count(), 
-            Integer.MAX_VALUE
-        );
+                .filter(t -> t.getStatus().equals("done"))
+                .count(), Integer.MAX_VALUE);
 
         Map<String, Integer> kpi = new HashMap<>();
         kpi.put("totalPlannedTasks", totalPlanned);
@@ -160,19 +168,19 @@ public class TaskService {
 
         return kpi;
     }
-    
+
     public Map<String, Double> getKpiTotals() {
         List<Task> tasks = taskRepository.findAll();
 
         double totalEstimated = tasks.stream()
-            .filter(t -> t.getEstimatedHours() != null)
-            .mapToDouble(Task::getEstimatedHours)
-            .sum();
+                .filter(t -> t.getEstimatedHours() != null)
+                .mapToDouble(Task::getEstimatedHours)
+                .sum();
 
         double totalEffort = tasks.stream()
-            .filter(t -> t.getEffortHours() != null)
-            .mapToDouble(Task::getEffortHours)
-            .sum();
+                .filter(t -> t.getEffortHours() != null)
+                .mapToDouble(Task::getEffortHours)
+                .sum();
 
         Map<String, Double> kpi = new HashMap<>();
         kpi.put("totalEstimatedHours", totalEstimated);

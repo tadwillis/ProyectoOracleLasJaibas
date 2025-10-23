@@ -63,6 +63,7 @@ function TaskList() {
   const [items, setItems] = useState([]);
   const [users, setUsers] = useState([]); // usuarios para asignar
   const [error, setError] = useState();
+  const [sprints, setSprints] = useState([]);
 
   // Diálogo "Agregar tarea"
   const [openCreate, setOpenCreate] = useState(false);
@@ -74,7 +75,8 @@ function TaskList() {
     priority: 'bajo',
     startDate: '',
     endDate: '',
-    assignedUserId: '' // string en UI
+    assignedUserId: '', // string en UI
+     sprintId: ''
   });
 
   // Diálogo "Editar tarea"
@@ -89,6 +91,7 @@ function TaskList() {
     priority: 'bajo',
     startDate: '',
     endDate: '',
+    sprintId: '',
     assignedUserId: '' // string en UI
   });
 
@@ -96,6 +99,7 @@ function TaskList() {
   useEffect(() => {
     loadTasks();
     loadUsers();
+    loadSprints();
   }, []);
 
   async function loadUsers() {
@@ -108,6 +112,16 @@ function TaskList() {
     } catch (e) {
       console.error('Error usuarios:', e);
     }
+  }
+
+  async function loadSprints() {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch('/api/sprints', { headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Error al obtener sprints');
+      const data = await res.json();
+      setSprints(Array.isArray(data) ? data : []);
+    } catch (e) { console.error('Error sprints:', e); }
   }
 
   async function loadTasks() {
@@ -173,6 +187,7 @@ function TaskList() {
     setInserting(true); setError(undefined);
 
     const assignedId = form.assignedUserId === '' ? null : Number(form.assignedUserId);
+    const sprintId = form.sprintId === '' ? null : Number(form.sprintId);
 
     const body = {
       title: form.title.trim(),
@@ -183,10 +198,10 @@ function TaskList() {
       priority: PRIORITY_MAP[form.priority] ?? 0,
       startDate: normDate(form.startDate),
       endDate: normDate(form.endDate),
-
       assignedTo: assignedId ? { id: assignedId } : null,
       assignedUserId: assignedId,
-      ASSIGNED_USER_ID: assignedId
+      ASSIGNED_USER_ID: assignedId,
+      sprint: sprintId ? { id: sprintId } : null
     };
 
     const qs = new URLSearchParams({
@@ -216,7 +231,8 @@ function TaskList() {
         priority: 'bajo',
         startDate: '',
         endDate: '',
-        assignedUserId: ''
+        assignedUserId: '',
+        sprintId: ''
       });
     } catch (e) {
       console.error(e); setError(e);
@@ -238,7 +254,8 @@ function TaskList() {
                  {0:'bajo',1:'medio',2:'alto'}[Number(task.priority)] : 'bajo'),
       startDate: task.startDate ? String(task.startDate).slice(0,10) : '',
       endDate:   task.endDate   ? String(task.endDate).slice(0,10)   : '',
-      assignedUserId: task.assignedTo?.id ?? task.ASSIGNED_USER_ID ?? ''
+      assignedUserId: task.assignedTo?.id ?? task.ASSIGNED_USER_ID ?? '',
+      sprintId: task.sprint?.id ?? ''
     });
     setOpenEdit(true);
   };
@@ -258,8 +275,19 @@ function TaskList() {
     }
     setError(undefined);
 
-    // string -> number (o null)
     const assignedId = editForm.assignedUserId === '' ? null : Number(editForm.assignedUserId);
+    const sprintId = editForm.sprintId === '' ? null : Number(editForm.sprintId);
+
+    // 🧠 Mantener sprint actual si no se selecciona uno nuevo
+    let sprintObj = null;
+    if (sprintId) {
+      sprintObj = { id: sprintId };
+    } else {
+      const currentTask = items.find(t => t.id === editId);
+      if (currentTask?.sprint?.id) {
+        sprintObj = { id: currentTask.sprint.id };
+      }
+    }
 
     const body = {
       title: editForm.title.trim(),
@@ -271,17 +299,21 @@ function TaskList() {
       startDate: normDate(editForm.startDate),
       endDate: normDate(editForm.endDate),
 
-      // Enviar todas las variantes para máxima compatibilidad con el backend
       assignedTo: assignedId ? { id: assignedId } : null,
       assignedUserId: assignedId,
-      ASSIGNED_USER_ID: assignedId
+      ASSIGNED_USER_ID: assignedId,
+      sprint: sprintObj // ✅ nuevo: mantiene o actualiza sprint correctamente
     };
 
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_LIST}/${editId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', "Authorization": `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          "Authorization": `Bearer ${token}`
+        },
         credentials: 'same-origin',
         body: JSON.stringify(body)
       });
@@ -291,46 +323,8 @@ function TaskList() {
         throw new Error(`Error al actualizar la tarea (HTTP ${res.status}) ${t}`);
       }
 
-      // Optimistic update inmediato
-      const pickedUser = users.find(u => String(u.id) === String(editForm.assignedUserId)) || null;
-      setItems(prev =>
-        prev.map(t =>
-          t.id === editId
-            ? {
-                ...t,
-                assignedTo: assignedId
-                  ? { id: assignedId, fullName: pickedUser?.fullName ?? t.assignedTo?.fullName ?? null }
-                  : null,
-                ASSIGNED_USER_ID: assignedId ?? null,
-                status: editStatus
-              }
-            : t
-        )
-      );
-
-      // Confirmación con GET por si el backend normaliza campos
-      try {
-        const token = localStorage.getItem("token");
-        const resTask = await fetch(`${API_LIST}/${editId}`, {
-          headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` },
-          credentials: 'same-origin'
-        });
-        if (resTask.ok) {
-          const updatedTask = await resTask.json();
-          setItems(prev =>
-            prev.map(t =>
-              t.id === editId
-                ? { ...t, ...updatedTask, assignedTo: updatedTask.assignedTo ?? t.assignedTo }
-                : t
-            )
-          );
-        } else {
-          await loadTasks(); // fallback si no responde bien
-        }
-      } catch {
-        await loadTasks(); // fallback seguro
-      }
-
+      // ✅ Refrescar lista real desde el backend para mantener sprint actualizado
+      await loadTasks();
       setOpenEdit(false);
     } catch (e2) {
       console.error(e2);
@@ -515,6 +509,13 @@ function TaskList() {
                                     </Typography>
                                   )}
 
+                                  {/* Sprint asignado */}
+                                  {item.sprint?.name && (
+                                    <Typography variant="caption" sx={{ display: 'block', mb: 0.3 }}>
+                                      <b>Sprint:</b> {item.sprint.name}
+                                    </Typography>
+                                  )}
+
                                   {/* Detalles */}
                                   <Stack spacing={0.25}>
                                     {item.estimatedHours != null && (
@@ -575,16 +576,7 @@ function TaskList() {
 
     {/* ========= Diálogo Agregar tarea ========= */}
     <Dialog open={openCreate} onClose={closeCreateDialog} fullWidth maxWidth="sm" component="form" onSubmit={handleCreate}>
-      <DialogTitle
-        sx={{
-          fontWeight: 700,
-          fontSize: 20,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          pb: 0,
-        }}
-      >
+      <DialogTitle sx={{ fontWeight: 700, fontSize: 20, display: 'flex', alignItems: 'center', gap: 1, pb: 0 }}>
         📝 Crear Nueva Tarea
       </DialogTitle>
       <Box sx={{ height: 3, bgcolor: '#f84600', mt: 1, mb: 2, borderRadius: 2 }} />
@@ -608,13 +600,29 @@ function TaskList() {
               ))}
             </TextField>
 
+            {/* 👇 Nuevo campo Sprint */}
+            <TextField
+              select
+              label="Sprint"
+              name="sprintId"
+              value={String(form.sprintId ?? '')}
+              onChange={handleCreateChange}
+              fullWidth
+            >
+              <MenuItem value="">Sin sprint</MenuItem>
+              {sprints.map(s => (
+                <MenuItem key={s.id} value={String(s.id)}>{s.name}</MenuItem>
+              ))}
+            </TextField>
+
+            {/* ... resto sin tocar ... */}
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="Horas estimadas"
                   name="estimatedHours"
-                  value={editForm.estimatedHours}
-                  onChange={handleEditChange}
+                  value={form.estimatedHours}
+                  onChange={handleCreateChange}
                   type="number"
                   fullWidth
                 />
@@ -624,8 +632,8 @@ function TaskList() {
                 <TextField
                   label="Horas de esfuerzo"
                   name="effortHours"
-                  value={editForm.effortHours}
-                  onChange={handleEditChange}
+                  value={form.effortHours}
+                  onChange={handleCreateChange}
                   type="number"
                   fullWidth
                 />
@@ -637,8 +645,8 @@ function TaskList() {
                     select
                     label="Prioridad"
                     name="priority"
-                    value={editForm.priority}
-                    onChange={handleEditChange}
+                    value={form.priority}
+                    onChange={handleCreateChange}
                     fullWidth
                   >
                     <MenuItem value="bajo">Baja</MenuItem>
@@ -649,8 +657,8 @@ function TaskList() {
                   <TextField
                     label="Fecha de inicio"
                     name="startDate"
-                    value={editForm.startDate}
-                    onChange={handleEditChange}
+                    value={form.startDate}
+                    onChange={handleCreateChange}
                     type="date"
                     InputLabelProps={{ shrink: true }}
                     fullWidth
@@ -659,8 +667,8 @@ function TaskList() {
                   <TextField
                     label="Fecha de fin"
                     name="endDate"
-                    value={editForm.endDate}
-                    onChange={handleEditChange}
+                    value={form.endDate}
+                    onChange={handleCreateChange}
                     type="date"
                     InputLabelProps={{ shrink: true }}
                     fullWidth
@@ -672,9 +680,7 @@ function TaskList() {
         </Paper>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={closeCreateDialog} sx={{ color: '#757575', textTransform: 'none' }}>
-          Cancelar
-        </Button>
+        <Button onClick={closeCreateDialog} sx={{ color: '#757575', textTransform: 'none' }}>Cancelar</Button>
         <Button
           type="submit"
           variant="contained"
@@ -692,6 +698,7 @@ function TaskList() {
         </Button>
       </DialogActions>
     </Dialog>
+
 
     {/* ========= Diálogo Editar tarea ========= */}
     <Dialog open={openEdit} onClose={closeEditDialog} fullWidth maxWidth="sm" component="form" onSubmit={handleEdit}>
@@ -725,6 +732,22 @@ function TaskList() {
               <MenuItem value="">Sin asignar</MenuItem>
               {users.map(u => (
                 <MenuItem key={u.id} value={String(u.id)}>{u.fullName}</MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              select
+              label="Sprint"
+              name="sprintId"
+              value={String(editForm.sprintId ?? '')}
+              onChange={handleEditChange}
+              fullWidth
+            >
+              <MenuItem value="">Sin sprint</MenuItem>
+              {sprints.map(s => (
+                <MenuItem key={s.id} value={String(s.id)}>
+                  {s.name}
+                </MenuItem>
               ))}
             </TextField>
 
