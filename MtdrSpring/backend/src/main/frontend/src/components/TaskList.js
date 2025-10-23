@@ -278,7 +278,6 @@ function TaskList() {
     const assignedId = editForm.assignedUserId === '' ? null : Number(editForm.assignedUserId);
     const sprintId = editForm.sprintId === '' ? null : Number(editForm.sprintId);
 
-    // 🧠 Mantener sprint actual si no se selecciona uno nuevo
     let sprintObj = null;
     if (sprintId) {
       sprintObj = { id: sprintId };
@@ -302,7 +301,7 @@ function TaskList() {
       assignedTo: assignedId ? { id: assignedId } : null,
       assignedUserId: assignedId,
       ASSIGNED_USER_ID: assignedId,
-      sprint: sprintObj // ✅ nuevo: mantiene o actualiza sprint correctamente
+      sprint: sprintObj
     };
 
     try {
@@ -322,8 +321,6 @@ function TaskList() {
         const t = await res.text().catch(() => '');
         throw new Error(`Error al actualizar la tarea (HTTP ${res.status}) ${t}`);
       }
-
-      // ✅ Refrescar lista real desde el backend para mantener sprint actualizado
       await loadTasks();
       setOpenEdit(false);
     } catch (e2) {
@@ -344,8 +341,7 @@ function TaskList() {
   }
 
   // ============ Drag & Drop ==============
-  async function updateStatus(id, _description, newStatus) {
-    setError(undefined);
+  async function updateStatusOptimistic(id, newStatus) {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_LIST}/${id}/status?status=${encodeURIComponent(newStatus)}`, {
@@ -353,9 +349,19 @@ function TaskList() {
         headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` },
         credentials: 'same-origin'
       });
+
       if (!res.ok) throw new Error('Error al actualizar estado');
-      await loadTasks();
-    } catch (e) { setError(e); }
+      // no se vuelve a cargar todo con loadTasks()
+    } catch (e) {
+      console.error(e);
+
+      // ⚠️ Si hay error, revertir el cambio local
+      setItems(prev =>
+        prev.map(i =>
+          i.id === id ? { ...i, status: normalizeStatus(i.status) } : i
+        )
+      );
+    }
   }
 
   function onDragEnd(result) {
@@ -367,7 +373,17 @@ function TaskList() {
     const targetColumn  = destination.droppableId;
     const filtered = items.filter(i => i.status === draggedColumn);
     const draggedItem = filtered[source.index];
-    if (draggedItem) updateStatus(draggedItem.id, draggedItem.description || draggedItem.title, targetColumn);
+    if (!draggedItem) return;
+
+    // Actualiza inmediatamente en la interfaz
+    setItems(prev =>
+      prev.map(i =>
+        i.id === draggedItem.id ? { ...i, status: targetColumn } : i
+      )
+    );
+
+    // Sincroniza con el servidor sin recargar la pantalla
+    updateStatusOptimistic(draggedItem.id, targetColumn);
   }
 
   const columns = [

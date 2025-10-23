@@ -189,7 +189,7 @@ function MyTasks() {
     e.preventDefault();
     const assignedId = editForm.assignedUserId === '' ? null : Number(editForm.assignedUserId);
     const sprintId = editForm.sprintId === '' ? null : Number(editForm.sprintId);
-    
+
     try {
       const body = {
         title: editForm.title.trim(),
@@ -228,34 +228,56 @@ function MyTasks() {
   }
 
   // ========= Drag & Drop =========
-  async function updateStatus(id, _description, newStatus) {
+  async function updateStatusOptimistic(id, newStatus) {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_LIST}/${id}/status?status=${encodeURIComponent(newStatus)}`, {
         method: 'PATCH',
-        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
+        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` },
+        credentials: 'same-origin'
       });
+
       if (!res.ok) throw new Error('Error al actualizar estado');
-      await loadTasks();
-    } catch (e) { setError(e); }
+      // no se vuelve a cargar todo con loadTasks()
+    } catch (e) {
+      console.error(e);
+
+      // ⚠️ Si hay error, revertir el cambio local
+      setItems(prev =>
+        prev.map(i =>
+          i.id === id ? { ...i, status: normalizeStatus(i.status) } : i
+        )
+      );
+    }
   }
 
   function onDragEnd(result) {
     if (!result.destination) return;
     const { source, destination } = result;
     if (source.droppableId === destination.droppableId) return;
+
     const draggedColumn = source.droppableId;
-    const targetColumn = destination.droppableId;
+    const targetColumn  = destination.droppableId;
     const filtered = items.filter(i => i.status === draggedColumn);
     const draggedItem = filtered[source.index];
-    if (draggedItem) updateStatus(draggedItem.id, draggedItem.description || draggedItem.title, targetColumn);
+    if (!draggedItem) return;
+
+    // Actualiza inmediatamente en la interfaz
+    setItems(prev =>
+      prev.map(i =>
+        i.id === draggedItem.id ? { ...i, status: targetColumn } : i
+      )
+    );
+
+    // Sincroniza con el servidor sin recargar la pantalla
+    updateStatusOptimistic(draggedItem.id, targetColumn);
   }
 
   const columns = [
-    { key: "todo", label: "To Do" },
+    { key: "todo",       label: "To Do" },
     { key: "inprogress", label: "In Progress" },
-    { key: "done", label: "Done" },
-    { key: "cancelled", label: "Cancelled" }
+    { key: "done",       label: "Done" },
+    { key: "cancelled",  label: "Cancelled" }
   ];
 
   // ===================== UI =====================

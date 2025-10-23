@@ -40,19 +40,22 @@ public class SecurityConfig {
                         .loginPage("/Login.js")
                         .permitAll())
                 .authorizeHttpRequests(auth -> auth
-                        // 1️⃣ Recursos frontend públicos
-                        .requestMatchers(
-                                "/", "/index.html",
-                                "/static/**", "/assets/**",
-                                "/img/**", "/css/**", "/js/**",
-                                "/register", "/favicon.ico"
-                        ).permitAll()
-                        // 2️⃣ Rutas de autenticación
-                        .requestMatchers("/api/auth/**").permitAll()
-                        // 3️⃣ Rutas protegidas
-                        .requestMatchers("/api/users/**", "/api/tasks/**").hasRole("USER")
-                        // 4️⃣ Cualquier otra ruta requiere autenticación
-                        .anyRequest().authenticated())
+                // 1️⃣ Recursos frontend públicos
+                .requestMatchers(
+                        "/", "/index.html",
+                        "/static/**", "/assets/**",
+                        "/img/**", "/css/**", "/js/**",
+                        "/favicon.ico"
+                ).permitAll()
+                // 2️⃣ Rutas de autenticación (login/register)
+                .requestMatchers("/api/auth/**").permitAll()
+
+                // 3️⃣ Rutas API protegidas (todas bajo /api/)
+                .requestMatchers("/api/**").hasRole("USER")
+
+                // 4️⃣ Rutas del frontend React (SPA)
+                .anyRequest().permitAll()
+                )
                 .userDetailsService(userDetailService)
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint((request, response, authException) ->
