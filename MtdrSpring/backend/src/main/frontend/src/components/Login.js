@@ -33,7 +33,7 @@ function Login() {
         localStorage.setItem("token", data["jwt-token"]); // guardar el token JWT
         localStorage.setItem("username", formData.username);
         setServerMessage("✅ Login exitoso, redirigiendo...");
-        setTimeout(() => navigate("/taskList"), 1500);
+        setTimeout(() => navigate("/Inicio"), 1500);
       } else {
         const errorData = await response.json();
         setServerMessage(errorData.error || "❌ Credenciales incorrectas");

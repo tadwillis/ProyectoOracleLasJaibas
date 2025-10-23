@@ -1,66 +1,40 @@
 // src/components/Sprints.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box, Button, Paper, Typography, Grid, Dialog, DialogTitle, DialogContent,
   DialogActions, TextField, MenuItem, Chip, IconButton, Card, CardContent,
   CardActions, Stack, Divider, Alert, LinearProgress, Tooltip
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import SearchIcon from '@mui/icons-material/Search';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import TopBar from './TopBar';
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import SearchIcon from "@mui/icons-material/Search";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import TopBar from "./TopBar";
 
-const API_BASE = '/api';
-
-// Banner configuration
+const API_BASE = "/api";
 const BANNER_SRC = "/img/banner-top.png";
-const heroSx = {
-  position: 'relative',
-  left: '50%', right: '50%', ml: '-50vw', mr: '-50vw',
-  width: '100vw',
-  backgroundImage: `url(${BANNER_SRC})`,
-  backgroundRepeat: 'no-repeat',
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-  py: { xs: 3, sm: 4 },
-};
 
-// Status options
 const STATUS_OPTIONS = [
-  { value: 'planned', label: 'Planeado', color: 'default' },
-  { value: 'active', label: 'Activo', color: 'success' },
-  { value: 'completed', label: 'Completado', color: 'info' },
-  { value: 'cancelled', label: 'Cancelado', color: 'error' }
+  { value: "planned", label: "Planeado", color: "default" },
+  { value: "active", label: "Activo", color: "success" },
+  { value: "completed", label: "Completado", color: "info" },
+  { value: "cancelled", label: "Cancelado", color: "error" },
 ];
 
-const getStatusLabel = (status) => {
-  const opt = STATUS_OPTIONS.find(s => s.value === status);
-  return opt ? opt.label : status;
+const getStatusLabel = (s) => STATUS_OPTIONS.find(x => x.value === s)?.label || s;
+const getStatusColor = (s) => STATUS_OPTIONS.find(x => x.value === s)?.color || "default";
+
+const formatDate = (d) => {
+  if (!d) return "N/A";
+  return new Date(d).toLocaleDateString("es-ES", { year: "numeric", month: "short", day: "numeric" });
 };
 
-const getStatusColor = (status) => {
-  const opt = STATUS_OPTIONS.find(s => s.value === status);
-  return opt ? opt.color : 'default';
-};
-
-// Format date helper
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
-};
-
-// Calculate sprint duration
-const calculateDuration = (startDate, endDate) => {
-  if (!startDate || !endDate) return 0;
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const diffTime = Math.abs(end - start);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays;
+const calculateDuration = (start, end) => {
+  if (!start || !end) return 0;
+  const diff = Math.abs(new Date(end) - new Date(start));
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
 };
 
 function Sprints() {
@@ -68,302 +42,188 @@ function Sprints() {
   const [projects, setProjects] = useState([]);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProject, setSelectedProject] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-
-  // Dialog states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProject, setSelectedProject] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [editingSprint, setEditingSprint] = useState(null);
 
-  // Form state
   const [form, setForm] = useState({
-    name: '',
-    goal: '',
-    startDate: '',
-    endDate: '',
-    status: 'planned',
-    projectId: ''
+    name: "", goal: "", startDate: "", endDate: "", status: "planned", projectId: ""
   });
 
-  // Load projects and sprints on mount
   useEffect(() => {
     loadProjects();
     loadSprints();
   }, []);
 
-  // Load projects
   const loadProjects = async () => {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/projects`, {
-        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
+        headers: { "Accept": "application/json", "Authorization": `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Error al cargar proyectos');
-      const data = await res.json();
-      setProjects(data);
-    } catch (err) {
-      console.error(err);
-      setError('Error al cargar proyectos');
+      if (!res.ok) throw new Error("Error al cargar proyectos");
+      setProjects(await res.json());
+    } catch {
+      setError("Error al cargar proyectos");
     }
   };
 
-  // Load all sprints
   const loadSprints = async () => {
     setLoading(true);
-    setError(null);
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/sprints`, {
-        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
+        headers: { "Accept": "application/json", "Authorization": `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Error al cargar sprints');
-      const data = await res.json();
-      setSprints(data);
-    } catch (err) {
-      console.error(err);
-      setError('Error al cargar sprints');
+      if (!res.ok) throw new Error("Error al cargar sprints");
+      setSprints(await res.json());
+    } catch {
+      setError("Error al cargar sprints");
     } finally {
       setLoading(false);
     }
   };
 
-  // Load sprints by project
+  const handleProjectFilterChange = (id) => {
+    setSelectedProject(id);
+    setSelectedStatus("all");
+    if (id === "all") loadSprints();
+    else loadSprintsByProject(id);
+  };
+
+  const handleStatusFilterChange = (s) => {
+    setSelectedStatus(s);
+    setSelectedProject("all");
+    if (s === "all") loadSprints();
+    else loadSprintsByStatus(s);
+  };
+
   const loadSprintsByProject = async (projectId) => {
     setLoading(true);
-    setError(null);
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/sprints/project/${projectId}`, {
-        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
+        headers: { "Accept": "application/json", "Authorization": `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Error al cargar sprints del proyecto');
-      const data = await res.json();
-      setSprints(data);
-    } catch (err) {
-      console.error(err);
-      setError('Error al cargar sprints del proyecto');
+      if (!res.ok) throw new Error();
+      setSprints(await res.json());
+    } catch {
+      setError("Error al cargar sprints del proyecto");
     } finally {
       setLoading(false);
     }
   };
 
-  // Load sprints by status
   const loadSprintsByStatus = async (status) => {
     setLoading(true);
-    setError(null);
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/sprints/status/${status}`, {
-        headers: { 'Accept': 'application/json', "Authorization": `Bearer ${token}` }
+        headers: { "Accept": "application/json", "Authorization": `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Error al cargar sprints por estado');
-      const data = await res.json();
-      setSprints(data);
-    } catch (err) {
-      console.error(err);
-      setError('Error al cargar sprints por estado');
+      if (!res.ok) throw new Error();
+      setSprints(await res.json());
+    } catch {
+      setError("Error al cargar sprints por estado");
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle project filter change
-  const handleProjectFilterChange = (projectId) => {
-    setSelectedProject(projectId);
-    setSelectedStatus('all');
-    if (projectId === 'all') {
+  const handleDeleteSprint = async (id) => {
+    if (!window.confirm("¿Eliminar este sprint?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/sprints/${id}`, {
+        method: "DELETE", headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error();
       loadSprints();
-    } else {
-      loadSprintsByProject(projectId);
+    } catch {
+      setError("Error al eliminar sprint");
     }
   };
 
-  // Handle status filter change
-  const handleStatusFilterChange = (status) => {
-    setSelectedStatus(status);
-    setSelectedProject('all');
-    if (status === 'all') {
-      loadSprints();
-    } else {
-      loadSprintsByStatus(status);
-    }
-  };
-
-  // Create new sprint
   const handleCreateSprint = async () => {
-    if (!form.name.trim()) {
-      setError('El nombre es obligatorio');
-      return;
-    }
-    if (!form.projectId) {
-      setError('Debe seleccionar un proyecto');
-      return;
-    }
-    if (!form.startDate || !form.endDate) {
-      setError('Las fechas de inicio y fin son obligatorias');
-      return;
-    }
-
-    // Validate dates
-    if (new Date(form.endDate) <= new Date(form.startDate)) {
-      setError('La fecha de fin debe ser posterior a la fecha de inicio');
-      return;
-    }
+    if (!form.name.trim()) return setError("El nombre es obligatorio");
+    if (!form.projectId) return setError("Debe seleccionar un proyecto");
+    if (!form.startDate || !form.endDate) return setError("Las fechas son obligatorias");
+    if (new Date(form.endDate) <= new Date(form.startDate))
+      return setError("La fecha de fin debe ser posterior");
 
     try {
-      const userId = localStorage.getItem('userId') || 1;
-
-      const payload = {
-        name: form.name,
-        goal: form.goal,
-        startDate: form.startDate,
-        endDate: form.endDate,
-        status: form.status
-      };
-
+      const userId = localStorage.getItem("userId") || 1;
+      const payload = { name: form.name, goal: form.goal, startDate: form.startDate, endDate: form.endDate, status: form.status };
       const token = localStorage.getItem("token");
-      const res = await fetch(
-        `${API_BASE}/sprints?projectId=${form.projectId}&createdBy=${userId}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
-          body: JSON.stringify(payload)
-        }
-      );
-
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || 'Error al crear sprint');
-      }
-
+      const res = await fetch(`${API_BASE}/sprints?projectId=${form.projectId}&createdBy=${userId}`, {
+        method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("Error al crear sprint");
       setOpenCreate(false);
       resetForm();
       loadSprints();
-      setError(null);
     } catch (err) {
-      console.error(err);
       setError(err.message);
     }
   };
 
-  // Update sprint
   const handleUpdateSprint = async () => {
-    if (!form.name.trim()) {
-      setError('El nombre es obligatorio');
-      return;
-    }
-    if (!form.startDate || !form.endDate) {
-      setError('Las fechas de inicio y fin son obligatorias');
-      return;
-    }
-
-    // Validate dates
-    if (new Date(form.endDate) <= new Date(form.startDate)) {
-      setError('La fecha de fin debe ser posterior a la fecha de inicio');
-      return;
-    }
+    if (!form.name.trim()) return setError("El nombre es obligatorio");
+    if (!form.startDate || !form.endDate) return setError("Las fechas son obligatorias");
+    if (new Date(form.endDate) <= new Date(form.startDate))
+      return setError("La fecha de fin debe ser posterior");
 
     try {
-      const payload = {
-        name: form.name,
-        goal: form.goal,
-        startDate: form.startDate,
-        endDate: form.endDate,
-        status: form.status
-      };
-
+      const payload = { name: form.name, goal: form.goal, startDate: form.startDate, endDate: form.endDate, status: form.status };
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/sprints/${editingSprint.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
+        method: "PUT", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
-
-      if (!res.ok) throw new Error('Error al actualizar sprint');
-
+      if (!res.ok) throw new Error();
       setOpenEdit(false);
       setEditingSprint(null);
       resetForm();
       loadSprints();
-      setError(null);
-    } catch (err) {
-      console.error(err);
-      setError(err.message);
+    } catch {
+      setError("Error al actualizar sprint");
     }
   };
 
-  // Delete sprint
-  const handleDeleteSprint = async (id) => {
-    if (!window.confirm('¿Estás seguro de eliminar este sprint?')) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/sprints/${id}`, {
-        method: 'DELETE',
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-
-      if (!res.ok) throw new Error('Error al eliminar sprint');
-
-      loadSprints();
-      setError(null);
-    } catch (err) {
-      console.error(err);
-      setError(err.message);
-    }
-  };
-
-  // Update sprint status
   const handleUpdateSprintStatus = async (id, newStatus) => {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/sprints/${id}/status?status=${newStatus}`, {
-        method: 'PATCH',
-        headers: { "Authorization": `Bearer ${token}` }
+        method: "PATCH", headers: { "Authorization": `Bearer ${token}` }
       });
-
-      if (!res.ok) throw new Error('Error al actualizar estado del sprint');
-
+      if (!res.ok) throw new Error();
       loadSprints();
-      setError(null);
-    } catch (err) {
-      console.error(err);
-      setError(err.message);
+    } catch {
+      setError("Error al actualizar estado");
     }
   };
 
-  // Open edit dialog
   const openEditDialog = (sprint) => {
     setEditingSprint(sprint);
     setForm({
-      name: sprint.name || '',
-      goal: sprint.goal || '',
-      startDate: sprint.startDate || '',
-      endDate: sprint.endDate || '',
-      status: sprint.status || 'planned',
-      projectId: sprint.project?.id || ''
+      name: sprint.name || "", goal: sprint.goal || "",
+      startDate: sprint.startDate || "", endDate: sprint.endDate || "",
+      status: sprint.status || "planned", projectId: sprint.project?.id || ""
     });
     setOpenEdit(true);
   };
 
-  // Reset form
   const resetForm = () => {
-    setForm({
-      name: '',
-      goal: '',
-      startDate: '',
-      endDate: '',
-      status: 'planned',
-      projectId: ''
-    });
+    setForm({ name: "", goal: "", startDate: "", endDate: "", status: "planned", projectId: "" });
   };
 
-  // Filter sprints by search term
-  const filteredSprints = sprints.filter(sprint =>
-    sprint.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (sprint.goal && sprint.goal.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filtered = sprints.filter(
+    s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.goal && s.goal.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -371,163 +231,114 @@ function Sprints() {
       <TopBar />
 
       {/* Banner */}
-      <Box sx={heroSx}>
-        <Box sx={{ maxWidth: 1680, mx: 'auto', px: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.35)' }}>
+      <Box sx={{
+        position: "relative", left: "50%", right: "50%", ml: "-50vw", mr: "-50vw", width: "100vw",
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${BANNER_SRC})`,
+        backgroundRepeat: "no-repeat", backgroundSize: "cover", backgroundPosition: "center", py: { xs: 4, sm: 5 }
+      }}>
+        <Box sx={{ maxWidth: 1600, mx: "auto", px: 3 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: "#fff", textShadow: "0 2px 4px rgba(0,0,0,.35)" }}>
             Sprints
           </Typography>
+          <Box sx={{ mt: 1, height: 3, width: 80, bgcolor: "#f84600ff", borderRadius: 2 }} />
         </Box>
       </Box>
 
-      {/* Main Content */}
-      <Box sx={{ bgcolor: '#f7f4ed', minHeight: '100vh', p: 4 }}>
-        <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
-
-          {/* Error Message */}
-          {error && (
-            <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+      {/* Main content */}
+      <Box sx={{ bgcolor: "#f5f5f5", minHeight: "100vh", p: 4 }}>
+        <Box sx={{ maxWidth: 1400, mx: "auto" }}>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
           {/* Toolbar */}
-          <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
+          <Paper elevation={3} sx={{ p: 2.5, mb: 4, borderRadius: 3, backgroundColor: "#fff", boxShadow: "0 4px 10px rgba(0,0,0,0.06)" }}>
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} sm={3}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Buscar sprints..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                <TextField fullWidth size="small" placeholder="Buscar sprints..."
+                  value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                   InputProps={{
-                    startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                    startAdornment: <SearchIcon sx={{ mr: 1, color: "text.secondary" }} />,
+                    sx: { borderRadius: 2, backgroundColor: "#fafafa" }
                   }}
                 />
               </Grid>
               <Grid item xs={12} sm={3}>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label="Filtrar por proyecto"
-                  value={selectedProject}
-                  onChange={(e) => handleProjectFilterChange(e.target.value)}
-                >
-                  <MenuItem value="all">Todos los proyectos</MenuItem>
-                  {projects.map(project => (
-                    <MenuItem key={project.id} value={project.id}>{project.name}</MenuItem>
-                  ))}
+                <TextField select fullWidth size="small" label="Filtrar por proyecto"
+                  value={selectedProject} onChange={(e) => handleProjectFilterChange(e.target.value)}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, backgroundColor: "#fafafa" } }}>
+                  <MenuItem value="all">Todos</MenuItem>
+                  {projects.map(p => <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>)}
                 </TextField>
               </Grid>
               <Grid item xs={12} sm={3}>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label="Filtrar por estado"
-                  value={selectedStatus}
-                  onChange={(e) => handleStatusFilterChange(e.target.value)}
-                >
-                  <MenuItem value="all">Todos los estados</MenuItem>
-                  {STATUS_OPTIONS.map(opt => (
-                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                  ))}
+                <TextField select fullWidth size="small" label="Filtrar por estado"
+                  value={selectedStatus} onChange={(e) => handleStatusFilterChange(e.target.value)}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, backgroundColor: "#fafafa" } }}>
+                  <MenuItem value="all">Todos</MenuItem>
+                  {STATUS_OPTIONS.map(opt => <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>)}
                 </TextField>
               </Grid>
-              <Grid item xs={12} sm={3} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setOpenCreate(true)}
-                  sx={{ bgcolor: '#1976d2' }}
-                >
+              <Grid item xs={12} sm={3} sx={{ display: "flex", justifyContent: "flex-end" }}>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpenCreate(true)}
+                  sx={{ bgcolor: "#f84600ff", "&:hover": { bgcolor: "#d6370fff" }, borderRadius: 2, textTransform: "none", fontWeight: 600 }}>
                   Nuevo Sprint
                 </Button>
               </Grid>
             </Grid>
           </Paper>
 
-          {/* Loading */}
-          {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+          {isLoading && <LinearProgress sx={{ mb: 2, bgcolor: "#d6d6d6", "& .MuiLinearProgress-bar": { backgroundColor: "#313131" } }} />}
 
-          {/* Sprints Grid */}
+          {/* Grid */}
           <Grid container spacing={3}>
-            {filteredSprints.length === 0 && !isLoading && (
+            {filtered.length === 0 && !isLoading && (
               <Grid item xs={12}>
-                <Paper sx={{ p: 4, textAlign: 'center' }}>
-                  <CalendarMonthIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-                  <Typography variant="h6" color="text.secondary">
-                    No hay sprints disponibles
-                  </Typography>
+                <Paper sx={{ p: 4, textAlign: "center" }}>
+                  <CalendarMonthIcon sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
+                  <Typography variant="h6" color="text.secondary">No hay sprints disponibles</Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {searchTerm ? 'No se encontraron resultados para tu búsqueda' : 'Crea tu primer sprint para comenzar'}
+                    {searchTerm ? "No se encontraron resultados" : "Crea tu primer sprint para comenzar"}
                   </Typography>
                 </Paper>
               </Grid>
             )}
 
-            {filteredSprints.map(sprint => {
-              const duration = calculateDuration(sprint.startDate, sprint.endDate);
-              
+            {filtered.map(s => {
+              const duration = calculateDuration(s.startDate, s.endDate);
               return (
-                <Grid item xs={12} sm={6} md={4} key={sprint.id}>
-                  <Card elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Grid item xs={12} sm={6} md={4} key={s.id}>
+                  <Card elevation={2} sx={{
+                    height: "100%", display: "flex", flexDirection: "column", borderRadius: 3,
+                    transition: "transform 0.25s ease, box-shadow 0.25s ease",
+                    "&:hover": { transform: "translateY(-5px)", boxShadow: "0 6px 16px rgba(0,0,0,0.12)" }
+                  }}>
                     <CardContent sx={{ flexGrow: 1 }}>
                       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                        <Chip
-                          label={getStatusLabel(sprint.status)}
-                          color={getStatusColor(sprint.status)}
-                          size="small"
-                        />
-                        {sprint.status === 'active' && (
-                          <Chip
-                            icon={<PlayArrowIcon />}
-                            label="En curso"
-                            color="success"
-                            size="small"
-                            variant="outlined"
-                          />
+                        <Chip label={getStatusLabel(s.status)} color={getStatusColor(s.status)} size="small" />
+                        {s.status === "active" && (
+                          <Chip icon={<PlayArrowIcon />} label="En curso" color="success" size="small" variant="outlined" />
                         )}
                       </Stack>
 
-                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                        {sprint.name}
-                      </Typography>
-
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: "#313131", mb: 1 }}>{s.name}</Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: 60 }}>
-                        {sprint.goal || 'Sin objetivo definido'}
+                        {s.goal || "Sin objetivo definido"}
                       </Typography>
-
                       <Divider sx={{ my: 1 }} />
-
                       <Stack spacing={0.5} sx={{ mt: 2 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          <strong>Inicio:</strong> {formatDate(sprint.startDate)}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          <strong>Fin:</strong> {formatDate(sprint.endDate)}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          <strong>Duración:</strong> {duration} días
-                        </Typography>
-                        {sprint.project && (
-                          <Typography variant="caption" color="text.secondary">
-                            <strong>Proyecto:</strong> {sprint.project.name}
-                          </Typography>
+                        <Typography variant="caption" color="text.secondary"><strong>Inicio:</strong> {formatDate(s.startDate)}</Typography>
+                        <Typography variant="caption" color="text.secondary"><strong>Fin:</strong> {formatDate(s.endDate)}</Typography>
+                        <Typography variant="caption" color="text.secondary"><strong>Duración:</strong> {duration} días</Typography>
+                        {s.project && (
+                          <Typography variant="caption" color="text.secondary"><strong>Proyecto:</strong> {s.project.name}</Typography>
                         )}
                       </Stack>
                     </CardContent>
 
-                    <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                    <CardActions sx={{ justifyContent: "space-between", px: 2, pb: 2 }}>
                       <Box>
-                        {sprint.status === 'planned' && (
+                        {s.status === "planned" && (
                           <Tooltip title="Iniciar Sprint">
-                            <IconButton 
-                              size="small" 
-                              color="success" 
-                              onClick={() => handleUpdateSprintStatus(sprint.id, 'active')}
-                            >
+                            <IconButton size="small" color="success" onClick={() => handleUpdateSprintStatus(s.id, "active")}>
                               <PlayArrowIcon />
                             </IconButton>
                           </Tooltip>
@@ -535,12 +346,12 @@ function Sprints() {
                       </Box>
                       <Box>
                         <Tooltip title="Editar">
-                          <IconButton size="small" color="primary" onClick={() => openEditDialog(sprint)}>
+                          <IconButton size="small" onClick={() => openEditDialog(s)} sx={{ bgcolor: "#313131", color: "#fff", "&:hover": { bgcolor: "#1f1f1f" } }}>
                             <EditIcon />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Eliminar">
-                          <IconButton size="small" color="error" onClick={() => handleDeleteSprint(sprint.id)}>
+                          <IconButton size="small" color="error" onClick={() => handleDeleteSprint(s.id)}>
                             <DeleteIcon />
                           </IconButton>
                         </Tooltip>
@@ -554,156 +365,231 @@ function Sprints() {
         </Box>
       </Box>
 
-      {/* Create Dialog */}
+            {/* CREATE DIALOG */}
       <Dialog open={openCreate} onClose={() => setOpenCreate(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Crear Nuevo Sprint</DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2 }}>
-            <TextField
-              fullWidth
-              label="Nombre del Sprint *"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              sx={{ mb: 2 }}
-              placeholder="Ej: Sprint 1 - Q1 2025"
-            />
-
-            <TextField
-              fullWidth
-              label="Objetivo del Sprint"
-              multiline
-              rows={3}
-              value={form.goal}
-              onChange={(e) => setForm({ ...form, goal: e.target.value })}
-              sx={{ mb: 2 }}
-              placeholder="Define el objetivo principal de este sprint..."
-            />
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Fecha de Inicio *"
-                  type="date"
-                  value={form.startDate}
-                  onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Fecha de Fin *"
-                  type="date"
-                  value={form.endDate}
-                  onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Estado"
-                  value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value })}
-                >
-                  {STATUS_OPTIONS.map(opt => (
-                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Proyecto *"
-                  value={form.projectId}
-                  onChange={(e) => setForm({ ...form, projectId: e.target.value })}
-                >
-                  {projects.map(project => (
-                    <MenuItem key={project.id} value={project.id}>{project.name}</MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-            </Grid>
+        <DialogTitle sx={{ display: "flex", flexDirection: "column", alignItems: "stretch" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            📅
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Crear Nuevo Sprint
+            </Typography>
           </Box>
+          <Box sx={{ mt: 1, height: 3, width: "100%", bgcolor: "#f84600ff", borderRadius: 2 }} />
+        </DialogTitle>
+        <DialogContent>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              bgcolor: "#f9f9f9",
+              boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
+            }}
+          >
+            <Box sx={{ pt: 2 }}>
+              <TextField
+                fullWidth
+                label="Nombre del Sprint *"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                sx={{ mb: 2 }}
+                placeholder="Ej: Sprint 1 - Q1 2025"
+              />
+
+              <TextField
+                fullWidth
+                label="Objetivo del Sprint"
+                multiline
+                rows={3}
+                value={form.goal}
+                onChange={(e) => setForm({ ...form, goal: e.target.value })}
+                sx={{ mb: 2 }}
+                placeholder="Define el objetivo principal de este sprint..."
+              />
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Fecha de Inicio *"
+                    type="date"
+                    value={form.startDate}
+                    onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Fecha de Fin *"
+                    type="date"
+                    value={form.endDate}
+                    onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    select
+                    fullWidth
+                    label="Estado"
+                    value={form.status}
+                    onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  >
+                    {STATUS_OPTIONS.map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    select
+                    fullWidth
+                    label="Proyecto *"
+                    value={form.projectId}
+                    onChange={(e) => setForm({ ...form, projectId: e.target.value })}
+                  >
+                    {projects.map((project) => (
+                      <MenuItem key={project.id} value={project.id}>
+                        {project.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              </Grid>
+            </Box>
+          </Paper>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => { setOpenCreate(false); resetForm(); }}>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={() => {
+              setOpenCreate(false);
+              resetForm();
+            }}
+            sx={{ color: "#757575", textTransform: "none", fontWeight: 500 }}
+          >
             Cancelar
           </Button>
-          <Button onClick={handleCreateSprint} variant="contained">
+          <Button
+            onClick={handleCreateSprint}
+            variant="contained"
+            sx={{
+              bgcolor: "#f84600ff",
+              "&:hover": { bgcolor: "#d6370fff" },
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 600,
+            }}
+          >
             Crear
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Edit Dialog */}
+      {/* EDIT DIALOG */}
       <Dialog open={openEdit} onClose={() => setOpenEdit(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Editar Sprint</DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2 }}>
-            <TextField
-              fullWidth
-              label="Nombre del Sprint *"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-
-            <TextField
-              fullWidth
-              label="Objetivo del Sprint"
-              multiline
-              rows={3}
-              value={form.goal}
-              onChange={(e) => setForm({ ...form, goal: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Fecha de Inicio *"
-                  type="date"
-                  value={form.startDate}
-                  onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Fecha de Fin *"
-                  type="date"
-                  value={form.endDate}
-                  onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Estado"
-                  value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value })}
-                >
-                  {STATUS_OPTIONS.map(opt => (
-                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-            </Grid>
+        <DialogTitle sx={{ display: "flex", flexDirection: "column", alignItems: "stretch" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            ✏️
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Editar Sprint
+            </Typography>
           </Box>
+          <Box sx={{ mt: 1, height: 3, width: "100%", bgcolor: "#313131", borderRadius: 2 }} />
+        </DialogTitle>
+        <DialogContent>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              bgcolor: "#f9f9f9",
+              boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
+            }}
+          >
+            <Box sx={{ pt: 2 }}>
+              <TextField
+                fullWidth
+                label="Nombre del Sprint *"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+
+              <TextField
+                fullWidth
+                label="Objetivo del Sprint"
+                multiline
+                rows={3}
+                value={form.goal}
+                onChange={(e) => setForm({ ...form, goal: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Fecha de Inicio *"
+                    type="date"
+                    value={form.startDate}
+                    onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Fecha de Fin *"
+                    type="date"
+                    value={form.endDate}
+                    onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    select
+                    fullWidth
+                    label="Estado"
+                    value={form.status}
+                    onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  >
+                    {STATUS_OPTIONS.map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              </Grid>
+            </Box>
+          </Paper>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => { setOpenEdit(false); setEditingSprint(null); resetForm(); }}>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={() => {
+              setOpenEdit(false);
+              setEditingSprint(null);
+              resetForm();
+            }}
+            sx={{ color: "#757575", textTransform: "none", fontWeight: 500 }}
+          >
             Cancelar
           </Button>
-          <Button onClick={handleUpdateSprint} variant="contained">
+          <Button
+            onClick={handleUpdateSprint}
+            variant="contained"
+            sx={{
+              bgcolor: "#313131",
+              "&:hover": { bgcolor: "#1f1f1f" },
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 600,
+            }}
+          >
             Actualizar
           </Button>
         </DialogActions>
@@ -713,3 +599,4 @@ function Sprints() {
 }
 
 export default Sprints;
+

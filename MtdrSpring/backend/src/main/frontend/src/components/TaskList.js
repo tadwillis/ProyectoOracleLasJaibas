@@ -4,7 +4,7 @@ import API_LIST from '../API';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {
-  Button, Paper, CircularProgress, Typography, Box, Grid, Stack,
+  Button, Paper, LinearProgress, Typography, Box, Grid, Stack,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Chip, IconButton
 } from '@mui/material';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
@@ -24,7 +24,7 @@ const PRIORITY_COLOR = (n) => {
   const v = Number(n);
   if (v === 2) return 'error';
   if (v === 1) return 'warning';
-  return 'success';              
+  return 'success';
 };
 
 const normDate = (s) => (s && String(s).trim() ? String(s).trim() : null);
@@ -49,11 +49,11 @@ const heroSx = {
   ml: '-50vw',
   mr: '-50vw',
   width: '100vw',
-  backgroundImage: `url(${BANNER_SRC})`,
+  backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${BANNER_SRC})`,
   backgroundRepeat: 'no-repeat',
   backgroundSize: 'cover',
   backgroundPosition: 'center',
-  py: { xs: 3, sm: 4 },
+  py: { xs: 4, sm: 5 },
 };
 
 // ===================== Componente =====================
@@ -93,8 +93,8 @@ function TaskList() {
   });
 
   // ======== Cargar tareas y usuarios ========
-  useEffect(() => { 
-    loadTasks(); 
+  useEffect(() => {
+    loadTasks();
     loadUsers();
   }, []);
 
@@ -183,7 +183,6 @@ function TaskList() {
       priority: PRIORITY_MAP[form.priority] ?? 0,
       startDate: normDate(form.startDate),
       endDate: normDate(form.endDate),
-
 
       assignedTo: assignedId ? { id: assignedId } : null,
       assignedUserId: assignedId,
@@ -386,49 +385,59 @@ function TaskList() {
 
   // ===================== UI =====================
   return (
-    <>
-      <TopBar />
+  <>
+    <TopBar />
 
-      {/* imagen detrás del título */}
-      <Box sx={heroSx}>
-        <Box
+    {/* imagen detrás del título */}
+    <Box sx={heroSx}>
+      <Box
+        sx={{
+          maxWidth: 1680,
+          mx: 'auto',
+          px: 2,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        <Typography
+          variant="h5"
+          sx={{ fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.35)' }}
+        >
+          Tablero de Tareas
+        </Typography>
+
+        <Button
+          variant="contained"
+          size="small"
+          onClick={openCreateDialog}
           sx={{
-            maxWidth: 1680,
-            mx: 'auto',
-            px: 2,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            bgcolor: '#f84600ff',
+            borderRadius: 2,
+            fontWeight: 600,
+            textTransform: 'none',
+            '&:hover': { bgcolor: '#d6370fff' }
           }}
         >
-          <Typography
-            variant="h5"
-            sx={{ fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.35)' }}
-          >
-            Tablero de Tareas
-          </Typography>
-
-          <Button
-            variant="contained"
-            size="small"
-            onClick={openCreateDialog}
-            sx={{
-              bgcolor: '#f84600ff',
-              '&:hover': { bgcolor: '#d6370fff' }
-            }}
-          >
-            Agregar tarea
-          </Button>
-        </Box>
+          Agregar tarea
+        </Button>
       </Box>
+    </Box>
 
-      {/* separador */}
-      <Box sx={{ mt: 3 }} />
-
-      {/* Contenedor principal del tablero */}
-      <Box sx={{ maxWidth: 1680, mx: "auto", p: 2 }}>
+    {/* Fondo principal + contenedor */}
+    <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: 4 }}>
+      <Box sx={{ maxWidth: 1680, mx: "auto", px: 2 }}>
         {error && <Typography color="error" variant="body2">Error: {error.message}</Typography>}
-        {isLoading && <CircularProgress size={28} sx={{ display: 'block', my: 3, mx: 'auto' }} />}
+
+        {isLoading && (
+          <LinearProgress
+            sx={{
+              mb: 2,
+              bgcolor: '#2f2f2f',
+              '& .MuiLinearProgress-bar': { bgcolor: '#444' },
+            }}
+          />
+        )}
 
         {!isLoading && (
           <DragDropContext onDragEnd={onDragEnd}>
@@ -452,10 +461,11 @@ function TaskList() {
                           minHeight: 300,
                           maxHeight: '55vh',
                           overflowY: 'auto',
-                          backgroundColor: '#fafafa',
+                          backgroundColor: '#ffffff',
                           p: 1.25,
-                          borderRadius: 1.5,
-                          border: '1px solid #eee'
+                          borderRadius: 2,
+                          border: '1px solid #e0e0e0',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                         }}
                       >
                         {items
@@ -469,8 +479,8 @@ function TaskList() {
                                   {...provided.dragHandleProps}
                                   elevation={1}
                                   sx={{
-                                    p: 1,
-                                    borderRadius: 1.5,
+                                    p: 1.25,
+                                    borderRadius: 2,
                                     border: '1px solid #ececec'
                                   }}
                                 >
@@ -490,7 +500,7 @@ function TaskList() {
                                     />
                                   </Stack>
 
-                                  {/* Usuario asignado (nombre + ID si está disponible) */}
+                                  {/* Usuario asignado */}
                                   {(item.assignedTo?.fullName || item.assignedTo?.id != null || item.ASSIGNED_USER_ID != null) && (
                                     <Typography variant="caption" sx={{ display: 'block', mb: 0.3 }}>
                                       Asignado a: {item.assignedTo?.fullName ?? '—'}
@@ -505,7 +515,7 @@ function TaskList() {
                                     </Typography>
                                   )}
 
-                                  {/* Detalles (solo si hay valor) */}
+                                  {/* Detalles */}
                                   <Stack spacing={0.25}>
                                     {item.estimatedHours != null && (
                                       <Typography variant="caption"><b>Estimado:</b> {item.estimatedHours} h</Typography>
@@ -561,23 +571,35 @@ function TaskList() {
           </DragDropContext>
         )}
       </Box>
+    </Box>
 
-      {/* ========= Diálogo Agregar tarea ========= */}
-      <Dialog open={openCreate} onClose={closeCreateDialog} fullWidth maxWidth="sm" component="form" onSubmit={handleCreate}>
-        <DialogTitle sx={{ py: 1.25, fontSize: 18 }}>Nueva tarea</DialogTitle>
-        <DialogContent dividers sx={{ py: 1.5 }}>
-          <Stack spacing={1.25}>
-            <TextField label="Título" name="title" value={form.title} onChange={handleCreateChange} required size="small" fullWidth />
-            <TextField label="Descripción" name="description" value={form.description} onChange={handleCreateChange} multiline minRows={2} size="small" fullWidth />
+    {/* ========= Diálogo Agregar tarea ========= */}
+    <Dialog open={openCreate} onClose={closeCreateDialog} fullWidth maxWidth="sm" component="form" onSubmit={handleCreate}>
+      <DialogTitle
+        sx={{
+          fontWeight: 700,
+          fontSize: 20,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          pb: 0,
+        }}
+      >
+        📝 Crear Nueva Tarea
+      </DialogTitle>
+      <Box sx={{ height: 3, bgcolor: '#f84600', mt: 1, mb: 2, borderRadius: 2 }} />
+      <DialogContent dividers sx={{ py: 2.5, px: 3 }}>
+        <Paper elevation={1} sx={{ p: 3, borderRadius: 3, bgcolor: '#fcfcfc' }}>
+          <Stack spacing={2}>
+            <TextField label="Título *" name="title" value={form.title} onChange={handleCreateChange} required fullWidth />
+            <TextField label="Descripción" name="description" value={form.description} onChange={handleCreateChange} multiline minRows={3} fullWidth />
 
-            {/* Seleccionar usuario */}
             <TextField
               select
               label="Asignar a usuario"
               name="assignedUserId"
               value={String(form.assignedUserId ?? '')}
               onChange={handleCreateChange}
-              size="small"
               fullWidth
             >
               <MenuItem value="">Sin asignar</MenuItem>
@@ -586,45 +608,118 @@ function TaskList() {
               ))}
             </TextField>
 
-            <Stack direction="row" spacing={1.25}>
-              <TextField label="Horas estimadas" name="estimatedHours" value={form.estimatedHours} onChange={handleCreateChange} type="number" inputProps={{ step: '1', min: '0' }} size="small" fullWidth />
-              <TextField label="Horas de esfuerzo" name="effortHours" value={form.effortHours} onChange={handleCreateChange} type="number" inputProps={{ step: '1', min: '0' }} size="small" fullWidth />
-            </Stack>
-            <TextField select label="Prioridad" name="priority" value={form.priority} onChange={handleCreateChange} size="small" fullWidth>
-              <MenuItem value="bajo">Bajo</MenuItem>
-              <MenuItem value="medio">Medio</MenuItem>
-              <MenuItem value="alto">Alto</MenuItem>
-            </TextField>
-            <Stack direction="row" spacing={1.25}>
-              <TextField label="Fecha de inicio" name="startDate" value={form.startDate} onChange={handleCreateChange} type="date" InputLabelProps={{ shrink: true }} size="small" fullWidth />
-              <TextField label="Fecha de fin" name="endDate" value={form.endDate} onChange={handleCreateChange} type="date" InputLabelProps={{ shrink: true }} size="small" fullWidth />
-            </Stack>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Horas estimadas"
+                  name="estimatedHours"
+                  value={editForm.estimatedHours}
+                  onChange={handleEditChange}
+                  type="number"
+                  fullWidth
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Horas de esfuerzo"
+                  name="effortHours"
+                  value={editForm.effortHours}
+                  onChange={handleEditChange}
+                  type="number"
+                  fullWidth
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Stack direction="row" spacing={2}>
+                  <TextField
+                    select
+                    label="Prioridad"
+                    name="priority"
+                    value={editForm.priority}
+                    onChange={handleEditChange}
+                    fullWidth
+                  >
+                    <MenuItem value="bajo">Baja</MenuItem>
+                    <MenuItem value="medio">Media</MenuItem>
+                    <MenuItem value="alto">Alta</MenuItem>
+                  </TextField>
+
+                  <TextField
+                    label="Fecha de inicio"
+                    name="startDate"
+                    value={editForm.startDate}
+                    onChange={handleEditChange}
+                    type="date"
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+
+                  <TextField
+                    label="Fecha de fin"
+                    name="endDate"
+                    value={editForm.endDate}
+                    onChange={handleEditChange}
+                    type="date"
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                </Stack>
+              </Grid>
+            </Grid>
           </Stack>
-        </DialogContent>
-        <DialogActions sx={{ py: 1 }}>
-          <Button onClick={closeCreateDialog} size="small">Cancelar</Button>
-          <Button type="submit" variant="contained" disabled={isInserting || !canSubmitCreate()} size="small" sx={{ bgcolor: '#F80000', '&:hover': { bgcolor: '#C00000' } }}>
-            {isInserting ? 'Guardando…' : 'Guardar'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Paper>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button onClick={closeCreateDialog} sx={{ color: '#757575', textTransform: 'none' }}>
+          Cancelar
+        </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={isInserting || !canSubmitCreate()}
+          sx={{
+            bgcolor: '#f84600',
+            textTransform: 'none',
+            fontWeight: 600,
+            borderRadius: 2,
+            px: 3,
+            '&:hover': { bgcolor: '#d6370f' }
+          }}
+        >
+          {isInserting ? 'Guardando…' : 'Crear'}
+        </Button>
+      </DialogActions>
+    </Dialog>
 
-      {/* ========= Diálogo Editar tarea ========= */}
-      <Dialog open={openEdit} onClose={closeEditDialog} fullWidth maxWidth="sm" component="form" onSubmit={handleEdit}>
-        <DialogTitle sx={{ py: 1.25, fontSize: 18 }}>Editar tarea</DialogTitle>
-        <DialogContent dividers sx={{ py: 1.5 }}>
-          <Stack spacing={1.25}>
-            <TextField label="Título" name="title" value={editForm.title} onChange={handleEditChange} required size="small" fullWidth />
-            <TextField label="Descripción" name="description" value={editForm.description} onChange={handleEditChange} multiline minRows={2} size="small" fullWidth />
+    {/* ========= Diálogo Editar tarea ========= */}
+    <Dialog open={openEdit} onClose={closeEditDialog} fullWidth maxWidth="sm" component="form" onSubmit={handleEdit}>
+      <DialogTitle
+        sx={{
+          fontWeight: 700,
+          fontSize: 20,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          pb: 0,
+        }}
+      >
+        ✏️ Editar Tarea
+      </DialogTitle>
+      <Box sx={{ height: 3, bgcolor: '#313131', mt: 1, mb: 2, borderRadius: 2 }} />
+      <DialogContent dividers sx={{ py: 2.5, px: 3 }}>
+        <Paper elevation={1} sx={{ p: 3, borderRadius: 3, bgcolor: '#fcfcfc' }}>
+          <Stack spacing={2}>
+            <TextField label="Título *" name="title" value={editForm.title} onChange={handleEditChange} required fullWidth />
+            <TextField label="Descripción" name="description" value={editForm.description} onChange={handleEditChange} multiline minRows={3} fullWidth />
 
-            {/* Seleccionar usuario */}
             <TextField
               select
               label="Asignar a usuario"
               name="assignedUserId"
               value={String(editForm.assignedUserId ?? '')}
               onChange={handleEditChange}
-              size="small"
               fullWidth
             >
               <MenuItem value="">Sin asignar</MenuItem>
@@ -633,30 +728,93 @@ function TaskList() {
               ))}
             </TextField>
 
-            <Stack direction="row" spacing={1.25}>
-              <TextField label="Horas estimadas" name="estimatedHours" value={editForm.estimatedHours} onChange={handleEditChange} type="number" inputProps={{ step: '0.25', min: '0' }} size="small" fullWidth />
-              <TextField label="Horas de esfuerzo" name="effortHours" value={editForm.effortHours} onChange={handleEditChange} type="number" inputProps={{ step: '0.25', min: '0' }} size="small" fullWidth />
-            </Stack>
-            <TextField select label="Prioridad" name="priority" value={editForm.priority} onChange={handleEditChange} size="small" fullWidth>
-              <MenuItem value="bajo">Bajo</MenuItem>
-              <MenuItem value="medio">Medio</MenuItem>
-              <MenuItem value="alto">Alto</MenuItem>
-            </TextField>
-            <Stack direction="row" spacing={1.25}>
-              <TextField label="Fecha de inicio" name="startDate" value={editForm.startDate} onChange={handleEditChange} type="date" InputLabelProps={{ shrink: true }} size="small" fullWidth />
-              <TextField label="Fecha de fin" name="endDate" value={editForm.endDate} onChange={handleEditChange} type="date" InputLabelProps={{ shrink: true }} size="small" fullWidth />
-            </Stack>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Horas estimadas"
+                  name="estimatedHours"
+                  value={editForm.estimatedHours}
+                  onChange={handleEditChange}
+                  type="number"
+                  fullWidth
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Horas de esfuerzo"
+                  name="effortHours"
+                  value={editForm.effortHours}
+                  onChange={handleEditChange}
+                  type="number"
+                  fullWidth
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Stack direction="row" spacing={2}>
+                  <TextField
+                    select
+                    label="Prioridad"
+                    name="priority"
+                    value={editForm.priority}
+                    onChange={handleEditChange}
+                    fullWidth
+                  >
+                    <MenuItem value="bajo">Baja</MenuItem>
+                    <MenuItem value="medio">Media</MenuItem>
+                    <MenuItem value="alto">Alta</MenuItem>
+                  </TextField>
+
+                  <TextField
+                    label="Fecha de inicio"
+                    name="startDate"
+                    value={editForm.startDate}
+                    onChange={handleEditChange}
+                    type="date"
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+
+                  <TextField
+                    label="Fecha de fin"
+                    name="endDate"
+                    value={editForm.endDate}
+                    onChange={handleEditChange}
+                    type="date"
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                </Stack>
+              </Grid>
+            </Grid>
+
           </Stack>
-        </DialogContent>
-        <DialogActions sx={{ py: 1 }}>
-          <Button onClick={closeEditDialog} size="small">Cancelar</Button>
-          <Button type="submit" variant="contained" size="small" sx={{ bgcolor: '#313131', color:'#ffffff', '&:hover': { bgcolor: '#313131' } }}>
-            Guardar cambios
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
-  );
+        </Paper>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button onClick={closeEditDialog} sx={{ color: '#757575', textTransform: 'none' }}>
+          Cancelar
+        </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          sx={{
+            bgcolor: '#313131',
+            color: '#fff',
+            textTransform: 'none',
+            fontWeight: 600,
+            borderRadius: 2,
+            px: 3,
+            '&:hover': { bgcolor: '#1f1f1f' }
+          }}
+        >
+          Guardar cambios
+        </Button>
+      </DialogActions>
+    </Dialog>
+  </>
+);
 }
 
 export default TaskList;

@@ -10,6 +10,7 @@ import Sprints from "./components/Sprints";
 import Projects from "./components/Projects";
 import Teams from "./components/Teams";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Inicio from "./components/Inicio"; // ✅ agregado
 
 function App() {
   return (
@@ -20,6 +21,14 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         {/* Privadas */}
+        <Route
+          path="/Inicio"
+          element={
+            <ProtectedRoute>       {/* ✅ protegida igual que las demás */}
+              <Inicio />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/taskList"
           element={
