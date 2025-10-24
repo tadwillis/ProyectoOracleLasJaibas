@@ -15,8 +15,38 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import TopBar from './TopBar';
 
+// === Framer Motion (solo UI; sin tocar la lógica) ===
+import { motion, useReducedMotion } from 'framer-motion';
+
+// ----------------- Tiempos centralizados (más lentos) -----------------
+const MOTION = {
+  enter: 0.45,         // duración de entrada de toolbar/cards
+  exit: 0.30,          // duración de salida
+  stagger: 0.12,       // desfase entre cards
+  delayChildren: 0.08, // retraso inicial del grupo
+  underline: 0.55,     // subrayado naranja
+  hover: 0.22,         // hover sutil en cards
+  reduced: 0.25        // modo "reduce motion"
+};
+// ---------------------------------------------------------------------
+
+// Variantes suaves y reutilizables
+const fadeInUp = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: MOTION.enter, ease: [0.16, 1, 0.3, 1] } },
+  exit:    { opacity: 0, y: 8,  transition: { duration: MOTION.exit } }
+};
+const staggerContainer = {
+  animate: { transition: { staggerChildren: MOTION.stagger, delayChildren: MOTION.delayChildren } }
+};
+const reduced = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: MOTION.reduced } },
+  exit:    { opacity: 0, transition: { duration: MOTION.reduced } }
+};
+
 const API_BASE = '/api';
-const BANNER_SRC = "/img/banner-top.png";
+const BANNER_SRC = "/img/banner-top3.png";
 
 // Fecha
 const formatDate = (dateString) => {
@@ -203,6 +233,13 @@ function Projects() {
   const getSprintsCount = (id) => sprints.filter(s => s.project?.id === id).length;
   const getActiveSprintsCount = (id) => sprints.filter(s => s.project?.id === id && s.status === 'active').length;
 
+  // Preferencias de accesibilidad
+  const prefersReducedMotion = useReducedMotion();
+  const cardVariants = prefersReducedMotion ? reduced : fadeInUp;
+  const underlineProps = prefersReducedMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1, transition: { duration: MOTION.reduced } } }
+    : { initial: { scaleX: 0 }, animate: { scaleX: 1, transition: { duration: MOTION.underline } }, style: { originX: 0 } };
+
   return (
     <>
       <TopBar />
@@ -213,7 +250,7 @@ function Projects() {
           position: 'relative',
           left: '50%', right: '50%', ml: '-50vw', mr: '-50vw',
           width: '100vw',
-          backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${BANNER_SRC})`,
+          backgroundImage: `linear-gradient(rgba(46,94,115,0.55), rgba(46,94,115,0.55)), url(${BANNER_SRC})`,
           backgroundRepeat: 'no-repeat',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -224,7 +261,10 @@ function Projects() {
           <Typography variant="h4" sx={{ fontWeight: 700, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,.35)' }}>
             Proyectos
           </Typography>
-          <Box sx={{ mt: 1, height: 3, width: 80, bgcolor: '#f84600ff', borderRadius: 2 }} />
+          {/* Subrayado con wipe sutil */}
+          <motion.div {...underlineProps}>
+            <Box sx={{ mt: 1, height: 3, width: 80, bgcolor: '#f84600ff', borderRadius: 2 }} />
+          </motion.div>
         </Box>
       </Box>
 
@@ -237,54 +277,56 @@ function Projects() {
             </Alert>
           )}
 
-          {/* Toolbar */}
-          <Paper elevation={3} sx={{ p: 2.5, mb: 4, borderRadius: 3, backgroundColor: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.06)' }}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} sm={5}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Buscar proyectos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-                    sx: { borderRadius: 2, backgroundColor: '#fafafa' }
-                  }}
-                />
+          {/* Toolbar con entrada suave */}
+          <motion.div variants={cardVariants} initial="initial" animate="animate" exit="exit">
+            <Paper elevation={3} sx={{ p: 2.5, mb: 4, borderRadius: 3, backgroundColor: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.06)' }}>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} sm={5}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="Buscar proyectos..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                      startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+                      sx: { borderRadius: 2, backgroundColor: '#fafafa' }
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    size="small"
+                    label="Filtrar por equipo"
+                    value={selectedTeam}
+                    onChange={(e) => handleTeamFilterChange(e.target.value)}
+                    SelectProps={{ native: true }}
+                  >
+                    <option value="all">Todos los equipos</option>
+                    {teams.map(team => (
+                      <option key={team.id} value={team.id}>{team.name}</option>
+                    ))}
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={3} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setOpenCreate(true)}
+                    sx={{
+                      bgcolor: '#f84600ff',
+                      '&:hover': { bgcolor: '#d6370fff' },
+                      borderRadius: 2, textTransform: 'none', fontWeight: 600
+                    }}
+                  >
+                    Nuevo Proyecto
+                  </Button>
+                </Grid>
               </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label="Filtrar por equipo"
-                  value={selectedTeam}
-                  onChange={(e) => handleTeamFilterChange(e.target.value)}
-                  SelectProps={{ native: true }}
-                >
-                  <option value="all">Todos los equipos</option>
-                  {teams.map(team => (
-                    <option key={team.id} value={team.id}>{team.name}</option>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={3} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setOpenCreate(true)}
-                  sx={{
-                    bgcolor: '#f84600ff',
-                    '&:hover': { bgcolor: '#d6370fff' },
-                    borderRadius: 2, textTransform: 'none', fontWeight: 600
-                  }}
-                >
-                  Nuevo Proyecto
-                </Button>
-              </Grid>
-            </Grid>
-          </Paper>
+            </Paper>
+          </motion.div>
 
           {/* Loading */}
           {isLoading && (
@@ -297,110 +339,120 @@ function Projects() {
             />
           )}
 
-          {/* Cards */}
-          <Grid container spacing={3}>
-            {filteredProjects.length === 0 && !isLoading && (
-              <Grid item xs={12}>
-                <Paper sx={{ p: 4, textAlign: 'center' }}>
-                  <FolderIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-                  <Typography variant="h6" color="text.secondary">
-                    No hay proyectos disponibles
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {searchTerm ? 'No se encontraron resultados para tu búsqueda' : 'Crea tu primer proyecto para comenzar'}
-                  </Typography>
-                </Paper>
-              </Grid>
-            )}
-
-            {filteredProjects.map(project => {
-              const sprintsCount = getSprintsCount(project.id);
-              const activeSprintsCount = getActiveSprintsCount(project.id);
-
-              return (
-                <Grid item xs={12} sm={6} md={4} key={project.id}>
-                  <Card
-                    elevation={2}
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      borderRadius: 3,
-                      transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-                      '&:hover': { transform: 'translateY(-5px)', boxShadow: '0 6px 16px rgba(0,0,0,0.12)' },
-                    }}
-                  >
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-                        <FolderIcon color="primary" />
-                        {project.team && (
-                          <Chip icon={<GroupIcon />} label={project.team.name} size="small" variant="outlined" />
-                        )}
-                      </Stack>
-
-                      <Typography
-                        variant="h6"
-                        gutterBottom
-                        sx={{ fontWeight: 700, color: '#313131', cursor: 'pointer', '&:hover': { color: 'primary.main' } }}
-                        onClick={() => openDetailsDialog(project)}
-                      >
-                        {project.name}
+          {/* Cards con stagger */}
+          <motion.div variants={staggerContainer} initial="initial" animate="animate">
+            <Grid container spacing={3}>
+              {filteredProjects.length === 0 && !isLoading && (
+                <Grid item xs={12}>
+                  <motion.div variants={cardVariants}>
+                    <Paper sx={{ p: 4, textAlign: 'center' }}>
+                      <FolderIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+                      <Typography variant="h6" color="text.secondary">
+                        No hay proyectos disponibles
                       </Typography>
-
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: 60 }}>
-                        {project.description || 'Sin descripción'}
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        {searchTerm ? 'No se encontraron resultados para tu búsqueda' : 'Crea tu primer proyecto para comenzar'}
                       </Typography>
-
-                      <Divider sx={{ my: 1 }} />
-
-                      <Stack spacing={1} sx={{ mt: 2 }}>
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <Badge badgeContent={sprintsCount} color="primary">
-                            <DirectionsRunIcon fontSize="small" color="action" />
-                          </Badge>
-                          <Typography variant="caption" color="text.secondary">
-                            {sprintsCount} {sprintsCount === 1 ? 'Sprint' : 'Sprints'}
-                          </Typography>
-                          {activeSprintsCount > 0 && (
-                            <Chip
-                              label={`${activeSprintsCount} activo${activeSprintsCount > 1 ? 's' : ''}`}
-                              size="small"
-                              color="success"
-                            />
-                          )}
-                        </Stack>
-                        <Typography variant="caption" color="text.secondary">
-                          <strong>Creado:</strong> {formatDate(project.createdAt)}
-                        </Typography>
-                      </Stack>
-                    </CardContent>
-
-                    <CardActions sx={{ justifyContent: 'flex-end', px: 2, pb: 2 }}>
-                      <Tooltip title="Ver detalles">
-                        <IconButton size="small" color="info" onClick={() => openDetailsDialog(project)}>
-                          <AssignmentIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Editar">
-                        <IconButton
-                          size="small"
-                          onClick={() => openEditDialog(project)}
-                          sx={{ bgcolor: '#313131', color: '#fff', '&:hover': { bgcolor: '#1f1f1f' } }}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar">
-                        <IconButton size="small" color="error" onClick={() => handleDeleteProject(project.id)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </CardActions>
-                  </Card>
+                    </Paper>
+                  </motion.div>
                 </Grid>
-              );
-            })}
-          </Grid>
+              )}
+
+              {filteredProjects.map(project => {
+                const sprintsCount = getSprintsCount(project.id);
+                const activeSprintsCount = getActiveSprintsCount(project.id);
+
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={project.id}>
+                    <motion.div
+                      variants={cardVariants}
+                      whileHover={!prefersReducedMotion ? { y: -5, scale: 1.01 } : {}}
+                      transition={{ type: 'tween', duration: MOTION.hover }}
+                    >
+                      <Card
+                        elevation={2}
+                        sx={{
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          borderRadius: 3,
+                          transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                          '&:hover': { transform: 'translateY(-5px)', boxShadow: '0 6px 16px rgba(0,0,0,0.12)' },
+                        }}
+                      >
+                        <CardContent sx={{ flexGrow: 1 }}>
+                          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                            <FolderIcon color="primary" />
+                            {project.team && (
+                              <Chip icon={<GroupIcon />} label={project.team.name} size="small" variant="outlined" />
+                            )}
+                          </Stack>
+
+                          <Typography
+                            variant="h6"
+                            gutterBottom
+                            sx={{ fontWeight: 700, color: '#313131', cursor: 'pointer', '&:hover': { color: 'primary.main' } }}
+                            onClick={() => openDetailsDialog(project)}
+                          >
+                            {project.name}
+                          </Typography>
+
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: 60 }}>
+                            {project.description || 'Sin descripción'}
+                          </Typography>
+
+                          <Divider sx={{ my: 1 }} />
+
+                          <Stack spacing={1} sx={{ mt: 2 }}>
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <Badge badgeContent={sprintsCount} color="primary">
+                                <DirectionsRunIcon fontSize="small" color="action" />
+                              </Badge>
+                              <Typography variant="caption" color="text.secondary">
+                                {sprintsCount} {sprintsCount === 1 ? 'Sprint' : 'Sprints'}
+                              </Typography>
+                              {activeSprintsCount > 0 && (
+                                <Chip
+                                  label={`${activeSprintsCount} activo${activeSprintsCount > 1 ? 's' : ''}`}
+                                  size="small"
+                                  color="success"
+                                />
+                              )}
+                            </Stack>
+                            <Typography variant="caption" color="text.secondary">
+                              <strong>Creado:</strong> {formatDate(project.createdAt)}
+                            </Typography>
+                          </Stack>
+                        </CardContent>
+
+                        <CardActions sx={{ justifyContent: 'flex-end', px: 2, pb: 2 }}>
+                          <Tooltip title="Ver detalles">
+                            <IconButton size="small" color="info" onClick={() => openDetailsDialog(project)}>
+                              <AssignmentIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Editar">
+                            <IconButton
+                              size="small"
+                              onClick={() => openEditDialog(project)}
+                              sx={{ bgcolor: '#313131', color: '#fff', '&:hover': { bgcolor: '#1f1f1f' } }}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Eliminar">
+                            <IconButton size="small" color="error" onClick={() => handleDeleteProject(project.id)}>
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </CardActions>
+                      </Card>
+                    </motion.div>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </motion.div>
         </Box>
       </Box>
 

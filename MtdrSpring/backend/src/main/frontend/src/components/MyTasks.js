@@ -10,6 +10,36 @@ import {
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import TopBar from '../components/TopBar';
 
+// === Framer Motion (solo UI; sin tocar la lógica) ===
+import { motion, useReducedMotion } from 'framer-motion';
+
+// ----------------- Tiempos centralizados (más lentos) -----------------
+const MOTION = {
+  enter: 0.45,         // entrada columnas/tarjetas
+  exit: 0.30,          // salida
+  stagger: 0.12,       // desfase entre hijos
+  delayChildren: 0.08, // retraso inicial
+  underline: 0.55,     // subrayado bajo el título
+  hover: 0.22,         // hover sutil en tarjetas
+  reduced: 0.25        // modo "reduce motion"
+};
+// ---------------------------------------------------------------------
+
+// Variantes suaves y reutilizables
+const fadeInUp = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: MOTION.enter, ease: [0.16, 1, 0.3, 1] } },
+  exit:    { opacity: 0, y: 8,  transition: { duration: MOTION.exit } }
+};
+const staggerContainer = {
+  animate: { transition: { staggerChildren: MOTION.stagger, delayChildren: MOTION.delayChildren } }
+};
+const reduced = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: MOTION.reduced } },
+  exit:    { opacity: 0, transition: { duration: MOTION.reduced } }
+};
+
 // ===================== Utilidades =====================
 const normalizeStatus = (s) => {
   if (!s) return 'todo';
@@ -67,7 +97,7 @@ function MyTasks() {
   const [openCreate, setOpenCreate] = useState(false);
   const [form, setForm] = useState({
     title: '', description: '', estimatedHours: '', effortHours: '',
-    priority: 'bajo', startDate: '', endDate: '', assignedUserId: '',sprintId: ''
+    priority: 'bajo', startDate: '', endDate: '', assignedUserId: '', sprintId: ''
   });
 
   const [openEdit, setOpenEdit] = useState(false);
@@ -75,11 +105,11 @@ function MyTasks() {
   const [editStatus, setEditStatus] = useState('todo');
   const [editForm, setEditForm] = useState({
     title: '', description: '', estimatedHours: '', effortHours: '',
-    priority: 'bajo', startDate: '', endDate: '', assignedUserId: '',sprintId: ''
+    priority: 'bajo', startDate: '', endDate: '', assignedUserId: '', sprintId: ''
   });
 
   // ======== Cargar ========
-  useEffect(() => { loadTasks(); loadUsers(); loadSprints();}, []);
+  useEffect(() => { loadTasks(); loadUsers(); loadSprints(); }, []);
 
   async function loadUsers() {
     try {
@@ -178,7 +208,8 @@ function MyTasks() {
       priority: (['0', '1', '2'].includes(String(task.priority)) ? { 0: 'bajo', 1: 'medio', 2: 'alto' }[Number(task.priority)] : 'bajo'),
       startDate: task.startDate ? String(task.startDate).slice(0, 10) : '',
       endDate: task.endDate ? String(task.endDate).slice(0, 10) : '',
-      assignedUserId: task.assignedTo?.id ?? task.ASSIGNED_USER_ID ?? '',sprintId: task.sprint?.id ?? ''
+      assignedUserId: task.assignedTo?.id ?? task.ASSIGNED_USER_ID ?? '',
+      sprintId: task.sprint?.id ?? ''
     });
     setOpenEdit(true);
   };
@@ -280,6 +311,13 @@ function MyTasks() {
     { key: "cancelled",  label: "Cancelled" }
   ];
 
+  // Preferencias accesibilidad
+  const prefersReducedMotion = useReducedMotion();
+  const cardVariants = prefersReducedMotion ? reduced : fadeInUp;
+  const underlineProps = prefersReducedMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1, transition: { duration: MOTION.reduced } } }
+    : { initial: { scaleX: 0 }, animate: { scaleX: 1, transition: { duration: MOTION.underline } }, style: { originX: 0 } };
+
   // ===================== UI =====================
   return (
     <>
@@ -287,15 +325,34 @@ function MyTasks() {
 
       {/* Banner */}
       <Box sx={heroSx}>
-        <Box sx={{
-          maxWidth: 1680, mx: 'auto', px: 2, display: 'flex',
-          justifyContent: 'space-between', alignItems: 'center'
-        }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.35)' }}>
-            Mis Tareas
-          </Typography>
-          <Button variant="contained" size="small" onClick={openCreateDialog}
-            sx={{ bgcolor: '#f84600ff', borderRadius: 2, fontWeight: 600, textTransform: 'none', '&:hover': { bgcolor: '#d6370fff' } }}>
+        <Box
+          sx={{
+            maxWidth: 1680, mx: 'auto', px: 2,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+          }}
+        >
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.35)' }}>
+              Mis Tareas
+            </Typography>
+            {/* Subrayado con wipe sutil */}
+            <motion.div {...underlineProps}>
+              <Box sx={{ mt: 1, height: 3, width: 80, bgcolor: '#f84600ff', borderRadius: 2 }} />
+            </motion.div>
+          </Box>
+
+          <Button
+            variant="contained"
+            size="small"
+            onClick={openCreateDialog}
+            sx={{
+              bgcolor: '#f84600ff',
+              borderRadius: 2,
+              fontWeight: 600,
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#d6370fff' }
+            }}
+          >
             Agregar tarea
           </Button>
         </Box>
@@ -306,103 +363,151 @@ function MyTasks() {
         <Box sx={{ maxWidth: 1680, mx: "auto", px: 2 }}>
           {error && <Typography color="error" variant="body2">Error: {error.message}</Typography>}
           {isLoading && (
-            <LinearProgress sx={{
-              mb: 2, bgcolor: '#2f2f2f',
-              '& .MuiLinearProgress-bar': { bgcolor: '#444' }
-            }} />
+            <LinearProgress sx={{ mb: 2, bgcolor: '#d6d6d6', '& .MuiLinearProgress-bar': { bgcolor: '#313131' } }} />
           )}
 
           {!isLoading && (
             <DragDropContext onDragEnd={onDragEnd}>
-              <Grid container spacing={1.5}>
-                {columns.map(col => (
-                  <Grid item xs={12} sm={6} md={3} key={col.key}>
-                    <Typography variant="subtitle1" align="center"
-                      sx={{ mb: 1.2, fontWeight: 700, letterSpacing: 0.2 }}>{col.label}</Typography>
+              {/* Grid con stagger para las columnas */}
+              <motion.div variants={staggerContainer} initial="initial" animate="animate">
+                <Grid container spacing={1.5}>
+                  {columns.map(col => (
+                    <Grid item xs={12} sm={6} md={3} key={col.key}>
+                      {/* Cada columna entra con fade+slide */}
+                      <motion.div variants={cardVariants}>
+                        <Typography
+                          variant="subtitle1"
+                          align="center"
+                          sx={{ mb: 1.2, fontWeight: 700, letterSpacing: 0.2 }}
+                        >
+                          {col.label}
+                        </Typography>
 
-                    <Droppable droppableId={col.key}>
-                      {(provided) => (
-                        <Stack {...provided.droppableProps} ref={provided.innerRef} spacing={1}
-                          sx={{
-                            minHeight: 300, maxHeight: '55vh', overflowY: 'auto',
-                            backgroundColor: '#ffffff', p: 1.25, borderRadius: 2,
-                            border: '1px solid #e0e0e0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                          }}>
-                          {items.filter(i => i.status === col.key).map((item, index) => (
-                            <Draggable key={String(item.id)} draggableId={String(item.id)} index={index}>
-                              {(provided) => (
-                                <Paper ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}
-                                  sx={{ p: 1.25, borderRadius: 2, border: '1px solid #ececec' }}>
-                                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{item.title}</Typography>
-                                    <Chip label={PRIORITY_LABEL(item.priority)} color={PRIORITY_COLOR(item.priority)} size="small" />
-                                  </Stack>
+                        <Droppable droppableId={col.key}>
+                          {(provided) => (
+                            <Stack
+                              {...provided.droppableProps}
+                              ref={provided.innerRef}
+                              spacing={1}
+                              sx={{
+                                minHeight: 300,
+                                maxHeight: '55vh',
+                                overflowY: 'auto',
+                                backgroundColor: '#ffffff',
+                                p: 1.25,
+                                borderRadius: 2,
+                                border: '1px solid #e0e0e0',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                              }}
+                            >
+                              {items
+                                .filter(i => i.status === col.key)
+                                .map((item, index) => (
+                                  <Draggable key={String(item.id)} draggableId={String(item.id)} index={index}>
+                                    {(provided, snapshot) => (
+                                      <Paper
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        // Convertimos el Paper a motion.div sin romper DnD
+                                        component={motion.div}
+                                        variants={cardVariants}
+                                        whileHover={!prefersReducedMotion && !snapshot.isDragging ? { y: -3, scale: 1.01 } : {}}
+                                        transition={{ type: 'tween', duration: MOTION.hover }}
+                                        elevation={1}
+                                        style={{ ...provided.draggableProps.style }}
+                                        sx={{ p: 1.25, borderRadius: 2, border: '1px solid #ececec' }}
+                                      >
+                                        {/* Encabezado */}
+                                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+                                          <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.15 }}>
+                                            {item.title}
+                                          </Typography>
+                                          <Chip
+                                            label={PRIORITY_LABEL(item.priority)}
+                                            color={PRIORITY_COLOR(item.priority)}
+                                            size="small"
+                                            variant="filled"
+                                          />
+                                        </Stack>
 
-                                  {item.assignedTo && (
-                                    <Typography variant="caption" sx={{ display: 'block', mb: 0.3 }}>
-                                      Asignado a: {item.assignedTo?.fullName ?? '—'}
-                                      {` (ID: ${item.assignedTo?.id ?? item.ASSIGNED_USER_ID ?? '—'})`}
-                                    </Typography>
-                                  )}
+                                        {/* Usuario asignado */}
+                                        {(item.assignedTo?.fullName || item.assignedTo?.id != null || item.ASSIGNED_USER_ID != null) && (
+                                          <Typography variant="caption" sx={{ display: 'block', mb: 0.3 }}>
+                                            Asignado a: {item.assignedTo?.fullName ?? '—'}
+                                            {` (ID: ${item.assignedTo?.id ?? item.ASSIGNED_USER_ID ?? '—'})`}
+                                          </Typography>
+                                        )}
 
-                                  {item.description && (
-                                    <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>
-                                      {item.description}
-                                    </Typography>
-                                  )}
+                                        {/* Descripción */}
+                                        {item.description && (
+                                          <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>
+                                            {item.description}
+                                          </Typography>
+                                        )}
 
-                                  {/* Sprint asignado */}
-                                  {item.sprint?.name && (
-                                    <Typography variant="caption" sx={{ display: 'block', mb: 0.3 }}>
-                                      <b>Sprint:</b> {item.sprint.name}
-                                    </Typography>
-                                  )}
+                                        {/* Sprint asignado */}
+                                        {item.sprint?.name && (
+                                          <Typography variant="caption" sx={{ display: 'block', mb: 0.3 }}>
+                                            <b>Sprint:</b> {item.sprint.name}
+                                          </Typography>
+                                        )}
 
-                                  <Stack spacing={0.25}>
-                                    {item.estimatedHours && (
-                                      <Typography variant="caption"><b>Estimado:</b> {item.estimatedHours} h</Typography>
+                                        {/* Detalles */}
+                                        <Stack spacing={0.25}>
+                                          {item.estimatedHours != null && (
+                                            <Typography variant="caption"><b>Estimado:</b> {item.estimatedHours} h</Typography>
+                                          )}
+                                          {item.effortHours != null && (
+                                            <Typography variant="caption"><b>Esfuerzo:</b> {item.effortHours} h</Typography>
+                                          )}
+                                          {item.startDate && (
+                                            <Typography variant="caption"><b>Inicio:</b> {String(item.startDate).slice(0,10)}</Typography>
+                                          )}
+                                          {item.endDate && (
+                                            <Typography variant="caption"><b>Fin:</b> {String(item.endDate).slice(0,10)}</Typography>
+                                          )}
+                                        </Stack>
+
+                                        {/* Acciones */}
+                                        <Box sx={{ display: 'flex', gap: 0.75, mt: 1, alignItems: 'center' }}>
+                                          <Button
+                                            startIcon={<EditIcon />}
+                                            variant="contained"
+                                            size="small"
+                                            onClick={() => openEditDialog(item)}
+                                            sx={{
+                                              bgcolor: '#313131',
+                                              color: '#ffffff',
+                                              '&:hover': { bgcolor: '#313131' },
+                                              px: 1.25, py: 0.4, minHeight: 0, lineHeight: 1.15, fontSize: 12
+                                            }}
+                                          >
+                                            Editar
+                                          </Button>
+                                          <IconButton
+                                            aria-label="Eliminar"
+                                            color="error"
+                                            size="small"
+                                            onClick={() => deleteItem(item.id)}
+                                            sx={{ width: 32, height: 32 }}
+                                          >
+                                            <DeleteIcon fontSize="small" />
+                                          </IconButton>
+                                        </Box>
+                                      </Paper>
                                     )}
-                                    {item.effortHours && (
-                                      <Typography variant="caption"><b>Esfuerzo:</b> {item.effortHours} h</Typography>
-                                    )}
-                                  </Stack>
-
-                                  <Box sx={{ display: 'flex', gap: 0.75, mt: 1 }}>
-                                    <Button
-                                      startIcon={<EditIcon />}
-                                      size="small"
-                                      variant="contained"
-                                      onClick={() => openEditDialog(item)}
-                                      sx={{
-                                        bgcolor: '#313131',
-                                        color: '#fff',
-                                        '&:hover': { bgcolor: '#1f1f1f' },
-                                        px: 1.25, py: 0.4, minHeight: 0, lineHeight: 1.15, fontSize: 12
-                                      }}
-                                    >
-                                      Editar
-                                    </Button>
-
-                                    <IconButton
-                                      color="error"
-                                      size="small"
-                                      onClick={() => deleteItem(item.id)}
-                                      sx={{ width: 32, height: 32 }}
-                                    >
-                                      <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                  </Box>
-                                </Paper>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </Stack>
-                      )}
-                    </Droppable>
-                  </Grid>
-                ))}
-              </Grid>
+                                  </Draggable>
+                                ))}
+                              {provided.placeholder}
+                            </Stack>
+                          )}
+                        </Droppable>
+                      </motion.div>
+                    </Grid>
+                  ))}
+                </Grid>
+              </motion.div>
             </DragDropContext>
           )}
         </Box>
@@ -434,7 +539,6 @@ function MyTasks() {
                 ))}
               </TextField>
 
-              {/* 👇 Nuevo campo Sprint */}
               <TextField
                 select
                 label="Sprint"
@@ -449,7 +553,6 @@ function MyTasks() {
                 ))}
               </TextField>
 
-              {/* ... resto sin tocar ... */}
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -693,4 +796,3 @@ function MyTasks() {
 }
 
 export default MyTasks;
-
