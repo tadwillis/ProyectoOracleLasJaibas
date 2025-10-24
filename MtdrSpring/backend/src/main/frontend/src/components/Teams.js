@@ -16,11 +16,9 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import InfoIcon from '@mui/icons-material/Info';
 import TopBar from './TopBar';
-
-// === Framer Motion (solo UI; sin tocar la lógica) ===
 import { motion, useReducedMotion } from 'framer-motion';
 
-// ----------------- Tiempos centralizados (más lentos) -----------------
+// ----------------- Tiempos  -----------------
 const MOTION = {
   enter: 0.45,         // duración de entrada de toolbar/cards
   exit: 0.30,          // duración de salida
@@ -32,7 +30,6 @@ const MOTION = {
 };
 // ---------------------------------------------------------------------
 
-// Variantes suaves y reutilizables
 const fadeInUp = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0, transition: { duration: MOTION.enter, ease: [0.16, 1, 0.3, 1] } },
@@ -124,7 +121,7 @@ function Teams() {
       const data = await res.json();
       setUsers(data);
     } catch (err) {
-      // Silencioso
+      
     }
   };
 
@@ -302,7 +299,7 @@ function Teams() {
     <>
       <TopBar />
 
-      {/* Banner con overlay y barra naranja */}
+      {/* Banner con overlay */}
       <Box
         sx={{
           position: 'relative',
@@ -319,7 +316,6 @@ function Teams() {
           <Typography variant="h4" sx={{ fontWeight: 700, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,.35)' }}>
             Equipos
           </Typography>
-          {/* Subrayado con wipe sutil */}
           <motion.div {...underlineProps}>
             <Box sx={{ mt: 1, height: 3, width: 80, bgcolor: '#f84600ff', borderRadius: 2 }} />
           </motion.div>
@@ -337,7 +333,7 @@ function Teams() {
             </Alert>
           )}
 
-          {/* Toolbar moderna con entrada suave */}
+          {/* Toolbar */}
           <motion.div variants={cardVariants} initial="initial" animate="animate" exit="exit">
             <Paper elevation={3} sx={{ p: 2.5, mb: 4, borderRadius: 3, backgroundColor: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.06)' }}>
               <Grid container spacing={2} alignItems="center">
@@ -498,11 +494,11 @@ function Teams() {
         </Box>
       </Box>
 
-      {/* CREATE DIALOG — barra naranja */}
+      {/* CREATE DIALOG */}
       <Dialog open={openCreate} onClose={() => setOpenCreate(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            🟠
+            📝
             <Typography variant="h6" sx={{ fontWeight: 600 }}>Crear Nuevo Equipo</Typography>
           </Box>
           <Box sx={{ mt: 1, height: 3, width: '100%', bgcolor: '#f84600ff', borderRadius: 2 }} />
@@ -544,7 +540,7 @@ function Teams() {
         </DialogActions>
       </Dialog>
 
-      {/* EDIT DIALOG — barra gris oscuro */}
+      {/* EDIT DIALOG */}
       <Dialog open={openEdit} onClose={() => setOpenEdit(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -588,7 +584,7 @@ function Teams() {
         </DialogActions>
       </Dialog>
 
-      {/* DETAILS DIALOG — barra azul */}
+      {/* DETAILS DIALOG */}
       <Dialog open={openDetails} onClose={() => setOpenDetails(false)} maxWidth="md" fullWidth>
         <DialogTitle sx={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -709,7 +705,7 @@ function Teams() {
         </DialogActions>
       </Dialog>
 
-      {/* ADD MEMBER DIALOG — barra ámbar */}
+      {/* ADD MEMBER DIALOG */}
       <Dialog open={openAddMember} onClose={() => setOpenAddMember(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

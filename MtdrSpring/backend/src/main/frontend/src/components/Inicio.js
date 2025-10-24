@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import TopBar from './TopBar';
 import API_LIST from '../API';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Box,
   Typography,
@@ -12,10 +13,7 @@ import {
   Chip,
 } from '@mui/material';
 
-// === Framer Motion (solo UI; sin tocar la lógica) ===
-import { motion, useReducedMotion } from 'framer-motion';
-
-// ----------------- Tiempos centralizados (más lentos) -----------------
+// ----------------- Tiempos  -----------------
 const MOTION = {
   enter: 0.45,         // entrada de secciones/tarjetas
   exit: 0.30,          // salida
@@ -27,7 +25,6 @@ const MOTION = {
 };
 // ---------------------------------------------------------------------
 
-// Variantes suaves y reutilizables
 const fadeInUp = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0, transition: { duration: MOTION.enter, ease: [0.16, 1, 0.3, 1] } },
@@ -119,16 +116,16 @@ const Inicio = () => {
     <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh' }}>
       <TopBar />
 
-      {/* ===== Banner superior (se mantiene tamaño/posición) ===== */}
+      {/* ===== Banner superior ===== */}
       <Box
         sx={{
           backgroundImage: 'url("/img/banner-top2.png")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          height: 240,                    // ← no se toca
+          height: 240,                    
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'flex-end',     // ← mantiene el título a la derecha
+          justifyContent: 'flex-end',    
           textAlign: 'right',
           pr: 8,
         }}
@@ -146,7 +143,7 @@ const Inicio = () => {
         </Typography>
       </Box>
 
-      {/* ===== Franja azul con botón (se mantiene) ===== */}
+      {/* ===== Franja azul con botón ===== */}
       <Box
         sx={{
           bgcolor: '#2e5e73',
@@ -175,10 +172,9 @@ const Inicio = () => {
         </Button>
       </Box>
 
-      {/* ===== Sección principal con estética + animaciones ===== */}
+      {/* ===== Sección principal  ===== */}
       <Box sx={{ py: 4, px: 3 }}>
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
-          {/* Título sección + subrayado naranja (wipe) */}
           <motion.div variants={cardVariants} initial="initial" animate="animate" exit="exit">
             <Box sx={{ mb: 3 }}>
               <Typography
@@ -193,7 +189,7 @@ const Inicio = () => {
             </Box>
           </motion.div>
 
-          {/* Filtros (chips) con entrada suave */}
+          {/* Filtros (chips)  */}
           <motion.div variants={cardVariants} initial="initial" animate="animate" exit="exit">
             <Box sx={{ display: 'flex', gap: 1.5, mb: 3, flexWrap: 'wrap' }}>
               <Chip

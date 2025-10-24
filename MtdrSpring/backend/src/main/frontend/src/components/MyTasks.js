@@ -9,11 +9,9 @@ import {
 } from '@mui/material';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import TopBar from '../components/TopBar';
-
-// === Framer Motion (solo UI; sin tocar la lógica) ===
 import { motion, useReducedMotion } from 'framer-motion';
 
-// ----------------- Tiempos centralizados (más lentos) -----------------
+// ----------------- Tiempos -----------------
 const MOTION = {
   enter: 0.45,         // entrada columnas/tarjetas
   exit: 0.30,          // salida
@@ -25,7 +23,6 @@ const MOTION = {
 };
 // ---------------------------------------------------------------------
 
-// Variantes suaves y reutilizables
 const fadeInUp = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0, transition: { duration: MOTION.enter, ease: [0.16, 1, 0.3, 1] } },
@@ -269,7 +266,6 @@ function MyTasks() {
       });
 
       if (!res.ok) throw new Error('Error al actualizar estado');
-      // no se vuelve a cargar todo con loadTasks()
     } catch (e) {
       console.error(e);
 
@@ -299,8 +295,6 @@ function MyTasks() {
         i.id === draggedItem.id ? { ...i, status: targetColumn } : i
       )
     );
-
-    // Sincroniza con el servidor sin recargar la pantalla
     updateStatusOptimistic(draggedItem.id, targetColumn);
   }
 
@@ -335,7 +329,6 @@ function MyTasks() {
             <Typography variant="h5" sx={{ fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.35)' }}>
               Mis Tareas
             </Typography>
-            {/* Subrayado con wipe sutil */}
             <motion.div {...underlineProps}>
               <Box sx={{ mt: 1, height: 3, width: 80, bgcolor: '#f84600ff', borderRadius: 2 }} />
             </motion.div>
@@ -373,7 +366,6 @@ function MyTasks() {
                 <Grid container spacing={1.5}>
                   {columns.map(col => (
                     <Grid item xs={12} sm={6} md={3} key={col.key}>
-                      {/* Cada columna entra con fade+slide */}
                       <motion.div variants={cardVariants}>
                         <Typography
                           variant="subtitle1"

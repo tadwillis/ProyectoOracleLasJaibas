@@ -9,11 +9,9 @@ import {
 } from '@mui/material';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import TopBar from '../components/TopBar';
-
-// === Framer Motion (solo UI; sin tocar la lógica) ===
 import { motion, useReducedMotion } from 'framer-motion';
 
-// ----------------- Tiempos centralizados (más lentos) -----------------
+// ----------------- Tiempos -----------------
 const MOTION = {
   enter: 0.45,         // entrada columnas/tarjetas
   exit: 0.30,          // salida
@@ -25,7 +23,6 @@ const MOTION = {
 };
 // ---------------------------------------------------------------------
 
-// Variantes suaves y reutilizables
 const fadeInUp = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0, transition: { duration: MOTION.enter, ease: [0.16, 1, 0.3, 1] } },
@@ -91,7 +88,7 @@ function TaskList() {
   const [isLoading, setLoading] = useState(false);
   const [isInserting, setInserting] = useState(false);
   const [items, setItems] = useState([]);
-  const [users, setUsers] = useState([]); // usuarios para asignar
+  const [users, setUsers] = useState([]); 
   const [error, setError] = useState();
   const [sprints, setSprints] = useState([]);
 
@@ -105,7 +102,7 @@ function TaskList() {
     priority: 'bajo',
     startDate: '',
     endDate: '',
-    assignedUserId: '', // string en UI
+    assignedUserId: '', 
     sprintId: ''
   });
 
@@ -122,7 +119,7 @@ function TaskList() {
     startDate: '',
     endDate: '',
     sprintId: '',
-    assignedUserId: '' // string en UI
+    assignedUserId: '' 
   });
 
   // ======== Cargar tareas y usuarios ========
@@ -168,8 +165,6 @@ function TaskList() {
         throw new Error(`Error al obtener tareas (HTTP ${res.status}) ${t}`);
       }
       const data = await res.json();
-
-      // Adaptador para assignedTo / assignedUserId / ASSIGNED_USER_ID
       const rows = (Array.isArray(data) ? data : []).map(t => {
         const status = normalizeStatus(t.status);
 
@@ -381,7 +376,6 @@ function TaskList() {
       });
 
       if (!res.ok) throw new Error('Error al actualizar estado');
-      // no se vuelve a cargar todo con loadTasks()
     } catch (e) {
       console.error(e);
 
@@ -405,14 +399,12 @@ function TaskList() {
     const draggedItem = filtered[source.index];
     if (!draggedItem) return;
 
-    // Actualiza inmediatamente en la interfaz
     setItems(prev =>
       prev.map(i =>
         i.id === draggedItem.id ? { ...i, status: targetColumn } : i
       )
     );
 
-    // Sincroniza con el servidor sin recargar la pantalla
     updateStatusOptimistic(draggedItem.id, targetColumn);
   }
 
@@ -454,7 +446,6 @@ function TaskList() {
           >
             Tablero de Tareas
           </Typography>
-          {/* subrayado con wipe sutil */}
           <motion.div {...underlineProps}>
             <Box sx={{ mt: 1, height: 3, width: 80, bgcolor: '#f84600ff', borderRadius: 2 }} />
           </motion.div>
@@ -499,7 +490,6 @@ function TaskList() {
               <Grid container spacing={1.5}>
                 {columns.map(col => (
                   <Grid item xs={12} sm={6} md={3} key={col.key}>
-                    {/* Cada columna entra con fade+slide */}
                     <motion.div variants={cardVariants}>
                       <Typography
                         variant="subtitle1"
@@ -675,7 +665,6 @@ function TaskList() {
               ))}
             </TextField>
 
-            {/* 👇 Nuevo campo Sprint */}
             <TextField
               select
               label="Sprint"
@@ -690,7 +679,6 @@ function TaskList() {
               ))}
             </TextField>
 
-            {/* ... resto sin tocar ... */}
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <TextField

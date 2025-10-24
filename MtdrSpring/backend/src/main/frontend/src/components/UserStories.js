@@ -11,11 +11,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import TopBar from './TopBar';
-
-// === Framer Motion (solo UI; sin tocar lógica) ===
 import { motion, useReducedMotion } from 'framer-motion';
 
-// ----------------- Tiempos centralizados (más lentos) -----------------
+// ----------------- Tiempos  -----------------
 const MOTION = {
   enter: 0.45,         // duración de entrada de cards/toolbar
   exit: 0.30,          // duración de salida
@@ -27,7 +25,6 @@ const MOTION = {
 };
 // ---------------------------------------------------------------------
 
-// Variantes suaves y reutilizables
 const fadeInUp = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0, transition: { duration: MOTION.enter, ease: [0.16, 1, 0.3, 1] } },
@@ -279,7 +276,6 @@ function UserStories() {
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,.35)' }}>
               User Stories
             </Typography>
-            {/* Subrayado con wipe sutil */}
             <motion.div {...underlineProps}>
               <Box sx={{ mt: 1, height: 3, width: 80, bgcolor: '#f84600ff', borderRadius: 2 }} />
             </motion.div>
@@ -291,8 +287,7 @@ function UserStories() {
       <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', p: 4 }}>
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
           {error && <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>{error}</Alert>}
-
-          {/* Toolbar con entrada suave */}
+          {/* Toolbar */}
           <motion.div variants={cardVariants} initial="initial" animate="animate" exit="exit">
             <Paper elevation={3} sx={{ p: 2.5, mb: 4, borderRadius: 3, backgroundColor: '#ffffff', boxShadow: '0 4px 10px rgba(0,0,0,0.06)' }}>
               <Grid container spacing={2} alignItems="center">
@@ -334,7 +329,7 @@ function UserStories() {
             <LinearProgress sx={{ mb: 2, bgcolor: '#d6d6d6', '& .MuiLinearProgress-bar': { backgroundColor: '#313131' } }} />
           )}
 
-          {/* Grid de historias con stagger */}
+          {/* Grid de historias */}
           <motion.div variants={staggerContainer} initial="initial" animate="animate">
             <Grid container spacing={3}>
               {filteredStories.length === 0 && !isLoading && (

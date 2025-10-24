@@ -10,7 +10,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import TopBar from '../components/TopBar';
 import { motion, useReducedMotion } from 'framer-motion';
 
-// ----------------- Tiempos centralizados -----------------
+// ----------------- Tiempos -----------------
 const MOTION = {
   enter: 0.45,         // duración de entrada de cards
   exit: 0.30,          // duración de salida de cards
@@ -162,8 +162,6 @@ function Dashboard() {
           >
             Dashboard
           </Typography>
-
-          {/* Subrayado naranja con “wipe” sutil */}
           <motion.div {...underlineProps}>
             <Box sx={{ mt: 1, height: 3, width: 80, bgcolor: '#f84600ff', borderRadius: 2 }} />
           </motion.div>
@@ -302,7 +300,7 @@ function Dashboard() {
                     </motion.div>
                   </Grid>
 
-                  {/* Acerca de mí con edición confirmable */}
+                  {/* Acerca de mí */}
                   <Grid item xs={12} md={6} lg={6}>
                     <motion.div
                       variants={cardVariants}
@@ -385,7 +383,7 @@ function Dashboard() {
                     </motion.div>
                   </Grid>
 
-                  {/* Capacitaciones: barra + agarrable en la misma línea (overlay) */}
+                  {/* Capacitaciones */}
                   <Grid item xs={12} md={6} lg={6}>
                     <motion.div
                       variants={cardVariants}
@@ -407,7 +405,7 @@ function Dashboard() {
                               <Chip size="small" label={`${course.value}%`} sx={{ fontWeight: 700 }} />
                             </Box>
 
-                            {/* Contenedor con overlay: la barra y el slider comparten línea */}
+                            {/* Contenedor con overlay */}
                             <Box sx={{ position: 'relative', height: 16 }}>
                               {/* Barra de progreso */}
                               <LinearProgress
@@ -420,7 +418,6 @@ function Dashboard() {
                                   '& .MuiLinearProgress-bar': { transition: `width ${MOTION.muiProgressMs}ms ease` }
                                 }}
                               />
-                              {/* Slider como agarrable sobre la misma barra */}
                               <Slider
                                 value={course.value}
                                 min={0}
