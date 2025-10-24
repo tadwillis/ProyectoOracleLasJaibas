@@ -409,92 +409,103 @@ function MyTasks() {
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
-                                        // Convertimos el Paper a motion.div sin romper DnD
-                                        component={motion.div}
-                                        variants={cardVariants}
-                                        whileHover={!prefersReducedMotion && !snapshot.isDragging ? { y: -3, scale: 1.01 } : {}}
-                                        transition={{ type: 'tween', duration: MOTION.hover }}
                                         elevation={1}
                                         style={{ ...provided.draggableProps.style }}
-                                        sx={{ p: 1.25, borderRadius: 2, border: '1px solid #ececec' }}
+                                        sx={{
+                                          p: 1.25,
+                                          borderRadius: 2,
+                                          border: '1px solid #ececec'
+                                        }}
                                       >
-                                        {/* Encabezado */}
-                                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
-                                          <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.15 }}>
-                                            {item.title}
-                                          </Typography>
-                                          <Chip
-                                            label={PRIORITY_LABEL(item.priority)}
-                                            color={PRIORITY_COLOR(item.priority)}
-                                            size="small"
-                                            variant="filled"
-                                          />
-                                        </Stack>
+                                        <motion.div
+                                          variants={cardVariants}
+                                          initial="initial"
+                                          animate={snapshot.isDragging ? false : "animate"}
+                                          exit="exit"
+                                          whileHover={!prefersReducedMotion && !snapshot.isDragging ? { y: -3, scale: 1.01 } : undefined}
+                                          transition={{ type: 'tween', duration: MOTION.hover }}
+                                        >
+                                          {/* Encabezado */}
+                                          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+                                            <Typography
+                                              variant="subtitle2"
+                                              sx={{ fontWeight: 700, lineHeight: 1.15 }}
+                                            >
+                                              {item.title}
+                                            </Typography>
+                                            <Chip
+                                              label={PRIORITY_LABEL(item.priority)}
+                                              color={PRIORITY_COLOR(item.priority)}
+                                              size="small"
+                                              variant="filled"
+                                            />
+                                          </Stack>
 
-                                        {/* Usuario asignado */}
-                                        {(item.assignedTo?.fullName || item.assignedTo?.id != null || item.ASSIGNED_USER_ID != null) && (
-                                          <Typography variant="caption" sx={{ display: 'block', mb: 0.3 }}>
-                                            Asignado a: {item.assignedTo?.fullName ?? '—'}
-                                            {` (ID: ${item.assignedTo?.id ?? item.ASSIGNED_USER_ID ?? '—'})`}
-                                          </Typography>
-                                        )}
-
-                                        {/* Descripción */}
-                                        {item.description && (
-                                          <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>
-                                            {item.description}
-                                          </Typography>
-                                        )}
-
-                                        {/* Sprint asignado */}
-                                        {item.sprint?.name && (
-                                          <Typography variant="caption" sx={{ display: 'block', mb: 0.3 }}>
-                                            <b>Sprint:</b> {item.sprint.name}
-                                          </Typography>
-                                        )}
-
-                                        {/* Detalles */}
-                                        <Stack spacing={0.25}>
-                                          {item.estimatedHours != null && (
-                                            <Typography variant="caption"><b>Estimado:</b> {item.estimatedHours} h</Typography>
+                                          {/* Usuario asignado */}
+                                          {(item.assignedTo?.fullName || item.assignedTo?.id != null || item.ASSIGNED_USER_ID != null) && (
+                                            <Typography variant="caption" sx={{ display: 'block', mb: 0.3 }}>
+                                              Asignado a: {item.assignedTo?.fullName ?? '—'}
+                                              {` (ID: ${item.assignedTo?.id ?? item.ASSIGNED_USER_ID ?? '—'})`}
+                                            </Typography>
                                           )}
-                                          {item.effortHours != null && (
-                                            <Typography variant="caption"><b>Esfuerzo:</b> {item.effortHours} h</Typography>
-                                          )}
-                                          {item.startDate && (
-                                            <Typography variant="caption"><b>Inicio:</b> {String(item.startDate).slice(0,10)}</Typography>
-                                          )}
-                                          {item.endDate && (
-                                            <Typography variant="caption"><b>Fin:</b> {String(item.endDate).slice(0,10)}</Typography>
-                                          )}
-                                        </Stack>
 
-                                        {/* Acciones */}
-                                        <Box sx={{ display: 'flex', gap: 0.75, mt: 1, alignItems: 'center' }}>
-                                          <Button
-                                            startIcon={<EditIcon />}
-                                            variant="contained"
-                                            size="small"
-                                            onClick={() => openEditDialog(item)}
-                                            sx={{
-                                              bgcolor: '#313131',
-                                              color: '#ffffff',
-                                              '&:hover': { bgcolor: '#313131' },
-                                              px: 1.25, py: 0.4, minHeight: 0, lineHeight: 1.15, fontSize: 12
-                                            }}
-                                          >
-                                            Editar
-                                          </Button>
-                                          <IconButton
-                                            aria-label="Eliminar"
-                                            color="error"
-                                            size="small"
-                                            onClick={() => deleteItem(item.id)}
-                                            sx={{ width: 32, height: 32 }}
-                                          >
-                                            <DeleteIcon fontSize="small" />
-                                          </IconButton>
-                                        </Box>
+                                          {/* Descripción */}
+                                          {item.description && (
+                                            <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>
+                                              {item.description}
+                                            </Typography>
+                                          )}
+
+                                          {/* Sprint asignado */}
+                                          {item.sprint?.name && (
+                                            <Typography variant="caption" sx={{ display: 'block', mb: 0.3 }}>
+                                              <b>Sprint:</b> {item.sprint.name}
+                                            </Typography>
+                                          )}
+
+                                          {/* Detalles */}
+                                          <Stack spacing={0.25}>
+                                            {item.estimatedHours != null && (
+                                              <Typography variant="caption"><b>Estimado:</b> {item.estimatedHours} h</Typography>
+                                            )}
+                                            {item.effortHours != null && (
+                                              <Typography variant="caption"><b>Tiempo Esfuerzo:</b> {item.effortHours} h</Typography>
+                                            )}
+                                            {item.startDate && (
+                                              <Typography variant="caption"><b>Inicio:</b> {String(item.startDate).slice(0,10)}</Typography>
+                                            )}
+                                            {item.endDate && (
+                                              <Typography variant="caption"><b>Fin:</b> {String(item.endDate).slice(0,10)}</Typography>
+                                            )}
+                                          </Stack>
+
+                                          {/* Acciones */}
+                                          <Box sx={{ display: 'flex', gap: 0.75, mt: 1, alignItems: 'center' }}>
+                                            <Button
+                                              startIcon={<EditIcon />}
+                                              variant="contained"
+                                              size="small"
+                                              onClick={() => openEditDialog(item)}
+                                              sx={{
+                                                bgcolor: '#313131',
+                                                color: '#ffffff',
+                                                '&:hover': { bgcolor: '#313131' },
+                                                px: 1.25, py: 0.4, minHeight: 0, lineHeight: 1.15, fontSize: 12
+                                              }}
+                                            >
+                                              Editar
+                                            </Button>
+                                            <IconButton
+                                              aria-label="Eliminar"
+                                              color="error"
+                                              size="small"
+                                              onClick={() => deleteItem(item.id)}
+                                              sx={{ width: 32, height: 32 }}
+                                            >
+                                              <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                          </Box>
+                                        </motion.div>
                                       </Paper>
                                     )}
                                   </Draggable>
