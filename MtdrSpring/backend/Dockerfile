@@ -1,4 +1,4 @@
-FROM openjdk:22
+FROM eclipse-temurin:17-jre-jammy
 #COPY pom.xml /tmp/
 #COPY src /tmp/src/
 WORKDIR /tmp/
