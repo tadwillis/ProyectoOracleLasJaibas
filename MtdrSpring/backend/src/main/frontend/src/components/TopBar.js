@@ -7,6 +7,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 // Ruta del logo
 const ORACLE_LOGO = '/img/Oracle-Symbol.png';
@@ -51,6 +52,17 @@ export default function TopBar() {
 
   const username = localStorage.getItem('username') || 'Usuario';
 
+  let userRole = null;
+  const token = localStorage.getItem('token');
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      userRole = decoded.role;
+    } catch (e) {
+      console.error("Invalid token in TopBar:", e);
+    }
+  }
+
   return (
     <AppBar position="sticky" sx={{ bgcolor: '#1e1e1e' }}>
       <Toolbar>
@@ -81,6 +93,15 @@ export default function TopBar() {
               {link.label}
             </Button>
           ))}
+          {userRole === 'ADMIN' && (
+             <Button
+              component={NavLink}
+              to="/admin"
+              sx={activeStyle}
+            >
+              Admin
+            </Button>
+          )}
         </Box>
 
         {/* User Menu */}

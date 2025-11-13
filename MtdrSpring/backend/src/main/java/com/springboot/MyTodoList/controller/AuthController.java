@@ -47,7 +47,7 @@ public class AuthController {
         user.setPassword(encodedPass);
         user = userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getUsername());
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
         return Collections.singletonMap("jwt-token",token);
     }
 
@@ -59,8 +59,11 @@ public class AuthController {
             UsernamePasswordAuthenticationToken authInputToken =
                     new UsernamePasswordAuthenticationToken(credentials.get("username"), credentials.get("password"));
             authenticationManager.authenticate(authInputToken);
+            
+            AppUser user = userRepository.findByUsername(credentials.get("username"))
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-            String token = jwtUtil.generateToken(credentials.get("username"));
+            String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
             return Collections.singletonMap("jwt-token",token);
         } catch(AuthenticationException authExc){
             throw new RuntimeException("Invalid username/password.");

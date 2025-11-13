@@ -36,6 +36,9 @@ public class AppUser {
     
     @Column(length = 20)
     private String status = "active";
+
+    @Column(nullable = false, length = 20)
+    private String role = "USER";
     
     @Column(name = "last_login")
     private LocalDateTime lastLogin;

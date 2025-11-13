@@ -10,6 +10,8 @@ import Sprints from "./components/Sprints";
 import Projects from "./components/Projects";
 import Teams from "./components/Teams";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute"; // Importar AdminRoute
+import Admin from "./components/Admin"; // Importar Admin
 import Inicio from "./components/Inicio";
 
 function App() {
@@ -19,6 +21,16 @@ function App() {
         {/* Públicas */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* Ruta de Admin */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <Admin />
+            </AdminRoute>
+          }
+        />
 
         {/* Privadas */}
         <Route
