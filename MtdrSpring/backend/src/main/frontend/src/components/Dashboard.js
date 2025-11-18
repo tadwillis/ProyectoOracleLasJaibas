@@ -50,6 +50,16 @@ const heroSx = {
 };
 
 function Dashboard() {
+  const [sprints, setSprints] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [selectedProjectHours, setSelectedProjectHours] = useState(null);
+  const [selectedProjectGlobal, setSelectedProjectGlobal] = useState(null);
+  const [selectedProjectTeam, setSelectedProjectTeam] = useState("");
+  const [selectedTeamHours, setSelectedTeamHours] = useState("");
+  const [teamSprintHoursMatrix, setTeamSprintHours] = useState(null);
+  const [sprintGlobalHours, setSprintGlobalHours] = useState([]);
+  const [sprintHoursList, setSprintHoursList] = useState([]);
   const [kpiHours, setKpiHours] = useState();
   const [kpiTasks, setKpiTasks] = useState();
   const [user, setUser] = useState();
@@ -87,6 +97,49 @@ function Dashboard() {
     } catch (e) { console.error('Error usuarios:', e); }
   }
 
+  async function loadProjects() {
+    const token = localStorage.getItem("token");
+    const res = await fetch("/api/projects", {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    setProjects(await res.json());
+  }
+
+  async function loadTeams() {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`/api/teams`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    setTeams(await res.json());
+  }
+
+  async function loadProjectsByTeam(teamId) {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`/api/projects/team/${teamId}`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    setProjects(await res.json());
+  }
+
+  async function loadTeamSprintMatrix(projectId, teamId) {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`/api/sprints/project/${projectId}/team/${teamId}/sprint-hours`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+    setTeamSprintHours(data);   //  👈 guarda { sprints, rows }
+  }
+
+  async function loadSprintsByProject(projectId) {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`/api/sprints/project/${projectId}`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    setSprints(await res.json());
+  }
+
+
   async function loadKPIUserHours() {
     try {
       const token = localStorage.getItem("token");
@@ -111,9 +164,33 @@ function Dashboard() {
     } catch (e) { console.error('Error al cargar KPI:', e); }
   }
 
+  const loadGlobalSprintHours = async (projectId) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`/api/sprints/project/${projectId}/globalHours`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+    setSprintGlobalHours(data);
+  };
+
+
+  const loadSprintHours = async (projectId) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`/api/sprints/project/${projectId}/hours?username=${username}`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+    setSprintHoursList(data);
+  };
+
+
   useEffect(() => {
     loadKPIUserHours();
     loadKPIUserTasks();
+    loadProjects();
+    loadTeams();
     loadUser();
   }, []);
 
@@ -210,7 +287,7 @@ function Dashboard() {
               {/* Columna derecha */}
               <Grid item xs={12} md={9} lg={9}>
                 <Grid container spacing={3}>
-                  {/* KPI Tareas */}
+                  {/* KPI Eficiencia en Tareas */}
                   <Grid item xs={12} md={6} lg={6}>
                     <motion.div
                       variants={cardVariants}
@@ -257,7 +334,7 @@ function Dashboard() {
                     </motion.div>
                   </Grid>
 
-                  {/* KPI Horas */}
+                  {/* KPI Eficiencia en Horas */}
                   <Grid item xs={12} md={6} lg={6}>
                     <motion.div
                       variants={cardVariants}
@@ -300,150 +377,206 @@ function Dashboard() {
                     </motion.div>
                   </Grid>
 
-                  {/* Acerca de mí */}
-                  <Grid item xs={12} md={6} lg={6}>
-                    <motion.div
-                      variants={cardVariants}
-                      whileHover={!prefersReducedMotion ? { y: -2, scale: 1.01 } : {}}
-                      transition={{ type: 'tween', duration: MOTION.hover }}
-                    >
-                      <Paper elevation={3} sx={{ p: 3, borderRadius: 3, bgcolor: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.06)' }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700 }}>Acerca de mí</Typography>
-                        <Divider sx={{ my: 1, width: 60, borderColor: '#d4a017', borderBottomWidth: 3, borderRadius: 2 }} />
+                  {/* KPI Horas por sprint y usuario*/}
+                  <Grid item xs={12}>
+                    <Paper sx={{ p: 3, borderRadius: 3 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700 }}>Tus Horas trabajadas por Sprint</Typography>
 
-                        {/* Cuéntanos sobre ti */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                          <Typography variant="subtitle2" sx={{ flex: 1 }}>Cuéntanos sobre ti</Typography>
-                          {!aboutMeEditing ? (
-                            <GreyEditBtn label="cuéntanos sobre ti" onClick={() => { setAboutMeDraft(aboutMe); setAboutMeEditing(true); }} />
-                          ) : (
-                            <>
-                              <SaveBtn onClick={() => { setAboutMe(aboutMeDraft.trim()); setAboutMeEditing(false); }} />
-                              <CancelBtn onClick={() => { setAboutMeEditing(false); setAboutMeDraft(aboutMe); }} />
-                            </>
-                          )}
-                        </Box>
-                        {aboutMeEditing ? (
-                          <TextField
-                            value={aboutMeDraft}
-                            onChange={(e) => setAboutMeDraft(e.target.value)}
-                            fullWidth size="small" multiline minRows={2} sx={{ mt: 1 }}
-                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); setAboutMe(aboutMeDraft.trim()); setAboutMeEditing(false); } }}
-                          />
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">{aboutMe}</Typography>
-                        )}
+                      {/* Selección de Proyecto */}
+                      <Box sx={{ mt: 2 }}>
+                        <TextField
+                          select
+                          label="Selecciona Proyecto"
+                          value={selectedProjectHours || ""}
+                          onChange={(e) => {
+                            const projectId = e.target.value;
+                            setSelectedProjectHours(projectId);
+                            loadSprintHours(projectId); // 👈 carga los sprints + horas
+                          }}
+                          SelectProps={{ native: true }}
+                          fullWidth
+                        >
 
-                        {/* Años de experiencia */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                          <Typography variant="subtitle2" sx={{ flex: 1 }}>Años de experiencia</Typography>
-                          {!expYearsEditing ? (
-                            <GreyEditBtn label="años de experiencia" onClick={() => { setExpYearsDraft(expYears); setExpYearsEditing(true); }} />
-                          ) : (
-                            <>
-                              <SaveBtn onClick={() => { setExpYears(expYearsDraft.trim()); setExpYearsEditing(false); }} />
-                              <CancelBtn onClick={() => { setExpYearsEditing(false); setExpYearsDraft(expYears); }} />
-                            </>
-                          )}
-                        </Box>
-                        {expYearsEditing ? (
-                          <TextField
-                            value={expYearsDraft}
-                            onChange={(e) => setExpYearsDraft(e.target.value)}
-                            fullWidth size="small" sx={{ mt: 1 }}
-                            onKeyDown={(e) => { if (e.key === 'Enter') { setExpYears(expYearsDraft.trim()); setExpYearsEditing(false); } }}
-                          />
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">{expYears}</Typography>
-                        )}
+                          <option value="" disabled>Selecciona...</option>
+                          {projects.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </TextField>
+                      </Box>
 
-                        {/* Habilidades */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                          <Typography variant="subtitle2" sx={{ flex: 1 }}>Habilidades</Typography>
-                          {!skillsEditing ? (
-                            <GreyEditBtn label="habilidades" onClick={() => { setSkillsDraft(skills); setSkillsEditing(true); }} />
-                          ) : (
-                            <>
-                              <SaveBtn onClick={() => { setSkills(skillsDraft.trim()); setSkillsEditing(false); }} />
-                              <CancelBtn onClick={() => { setSkillsEditing(false); setSkillsDraft(skills); }} />
-                            </>
-                          )}
+                      {/* Resultado */}
+                      {sprintHoursList.length > 0 && (
+                        <Box sx={{ mt: 3 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                            Horas trabajadas por sprint
+                          </Typography>
+
+                          <table style={{ width: "100%", marginTop: "15px" }}>
+                            <thead>
+                              <tr>
+                                <th style={{ textAlign: "left" }}>Sprint</th>
+                                <th style={{ textAlign: "left" }}>Horas Totales</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sprintHoursList.map((s) => (
+                                <tr key={s.sprintId}>
+                                  <td>{s.sprintName}</td>
+                                  <td>{s.totalHours.toFixed(2)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </Box>
-                        {skillsEditing ? (
-                          <TextField
-                            value={skillsDraft}
-                            onChange={(e) => setSkillsDraft(e.target.value)}
-                            fullWidth size="small" multiline minRows={2} sx={{ mt: 1 }}
-                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); setSkills(skillsDraft.trim()); setSkillsEditing(false); } }}
-                          />
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">{skills}</Typography>
-                        )}
-                      </Paper>
-                    </motion.div>
+                      )}
+                    </Paper>
                   </Grid>
 
-                  {/* Capacitaciones */}
-                  <Grid item xs={12} md={6} lg={6}>
-                    <motion.div
-                      variants={cardVariants}
-                      whileHover={!prefersReducedMotion ? { y: -2, scale: 1.01 } : {}}
-                      transition={{ type: 'tween', duration: MOTION.hover }}
-                    >
-                      <Paper elevation={3} sx={{ p: 3, borderRadius: 3, bgcolor: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.06)' }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700 }}>Capacitaciones</Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: .5 }}>
-                          3 Capacitaciones asignadas
-                        </Typography>
 
-                        {courses.map((course, i) => (
-                          <Box key={i} sx={{ mt: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-                              <Typography variant="body2" sx={{ mr: 2, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {course.name}
-                              </Typography>
-                              <Chip size="small" label={`${course.value}%`} sx={{ fontWeight: 700 }} />
-                            </Box>
+                  {/* KPI Horas globales por sprint y usuario */}
+                  <Grid item xs={12}>
+                    <Paper sx={{ p: 3, borderRadius: 3 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700 }}>Horas globales trabajadas por Sprint</Typography>
 
-                            {/* Contenedor con overlay */}
-                            <Box sx={{ position: 'relative', height: 16 }}>
-                              {/* Barra de progreso */}
-                              <LinearProgress
-                                variant="determinate"
-                                value={course.value}
-                                sx={{
-                                  position: 'absolute',
-                                  left: 0, right: 0, top: 5,
-                                  height: 6, borderRadius: 2,
-                                  '& .MuiLinearProgress-bar': { transition: `width ${MOTION.muiProgressMs}ms ease` }
-                                }}
-                              />
-                              <Slider
-                                value={course.value}
-                                min={0}
-                                max={100}
-                                step={1}
-                                onChange={(_, val) => {
-                                  const v = Array.isArray(val) ? val[0] : val;
-                                  setCourses(prev => prev.map((c, idx) => idx === i ? { ...c, value: v } : c));
-                                }}
-                                aria-label={`Progreso ${course.name}`}
-                                sx={{
-                                  position: 'absolute',
-                                  left: 0, right: 0, top: -2,
-                                  height: 14,
-                                  '& .MuiSlider-rail': { opacity: 0 },
-                                  '& .MuiSlider-track': { opacity: 0 },
-                                  '& .MuiSlider-mark': { display: 'none' },
-                                  '& .MuiSlider-thumb': { boxShadow: 'none' }
-                                }}
-                              />
-                            </Box>
-                          </Box>
-                        ))}
-                      </Paper>
-                    </motion.div>
+                      {/* Selección de Proyecto */}
+                      <Box sx={{ mt: 2 }}>
+                        <TextField
+                          select
+                          label="Selecciona Proyecto"
+                          value={selectedProjectGlobal || ""}
+                          onChange={(e) => {
+                            const projectId = e.target.value;
+                            setSelectedProjectGlobal(projectId);
+                            loadGlobalSprintHours(projectId); // 👈 carga los sprints + horas
+                          }}
+                          SelectProps={{ native: true }}
+                          fullWidth
+                        >
+                          <option value="" disabled>Selecciona...</option>
+                          {projects.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </TextField>
+                      </Box>
+
+                      {/* Resultado */}
+                      {sprintGlobalHours.length > 0 && (
+                        <Box sx={{ mt: 3 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                            Horas trabajadas por sprint
+                          </Typography>
+
+                          <table style={{ width: "100%", marginTop: "15px" }}>
+                            <thead>
+                              <tr>
+                                <th style={{ textAlign: "left" }}>Sprint</th>
+                                <th style={{ textAlign: "left" }}>Horas Totales</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sprintGlobalHours.map((s) => (
+                                <tr key={s.sprintId}>
+                                  <td>{s.sprintName}</td>
+                                  <td>{s.totalHours.toFixed(2)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </Box>
+                      )}
+                    </Paper>
                   </Grid>
+
+                  {/* KPI Horas por miembro del equipo por sprint */}
+                  <Grid item xs={12}>
+                    <Paper sx={{ p: 3, borderRadius: 3 }}>
+                      
+                      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                        Horas por Sprint por cada Miembro del Equipo
+                      </Typography>
+
+                      {/* Selección de Proyecto */}
+                      <Box sx={{ mt: 2 }}>
+                        <TextField
+                          select
+                          fullWidth
+                          label="Selecciona Proyecto"
+                          value={selectedProjectTeam || ""}
+                          onChange={(e) => {
+                            setSelectedProjectTeam(e.target.value);
+                          }}
+                          SelectProps={{ native: true }}
+                        >
+                          <option value="" disabled>Selecciona...</option>
+                          {projects.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </TextField>
+                      </Box>
+
+                      {/* Selección de Equipo */}
+                      {selectedProjectTeam && (
+                        <Box sx={{ mt: 2 }}>
+                          <TextField
+                            select
+                            fullWidth
+                            label="Selecciona Equipo"
+                            value={selectedTeamHours || ""}
+                            onChange={(e) => {
+                              const teamId = e.target.value;
+                              setSelectedTeamHours(teamId);
+
+                              // cargar tabla
+                              loadTeamSprintMatrix(selectedProjectTeam, teamId);
+                            }}
+                            SelectProps={{ native: true }}
+                          >
+                            <option value="" disabled>Selecciona...</option>
+                            {teams.map(t => (
+                              <option key={t.id} value={t.id}>{t.name}</option>
+                            ))}
+                          </TextField>
+                        </Box>
+                      )}
+
+                      {/* TABLA */}
+                      {teamSprintHoursMatrix && (
+                        <Box sx={{ mt: 3 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                            Tabla de Horas del Equipo
+                          </Typography>
+
+                          <table style={{ width: "100%", marginTop: "15px", borderCollapse: "collapse" }}>
+                            <thead>
+                              <tr>
+                                <th style={{ textAlign: "left", padding: "6px" }}>Usuario</th>
+
+                                {teamSprintHoursMatrix.sprints.map((sprintName, idx) => (
+                                  <th key={idx} style={{ textAlign: "left", padding: "6px" }}>
+                                    {sprintName}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+
+                            <tbody>
+                              {teamSprintHoursMatrix.rows.map((row, rowIndex) => (
+                                <tr key={rowIndex}>
+                                  <td style={{ padding: "6px", fontWeight: 600 }}>{row.user}</td>
+
+                                  {row.hours.map((h, hIdx) => (
+                                    <td key={hIdx} style={{ padding: "6px" }}>{h}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </Box>
+                      )}
+
+                    </Paper>
+                  </Grid>
+
                 </Grid>
               </Grid>
             </Grid>

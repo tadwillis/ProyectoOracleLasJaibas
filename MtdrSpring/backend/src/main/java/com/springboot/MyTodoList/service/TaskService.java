@@ -189,4 +189,24 @@ public class TaskService {
 
         return kpi;
     }
+
+    // public Double getWorkedHoursBySprint(String username, Long sprintId) {
+    //     Sprint sprint = sprintRepository.findById(sprintId)
+    //             .orElseThrow(() -> new RuntimeException("Sprint not found"));
+
+    //     // Tareas del usuario
+    //     List<Task> tasks = taskRepository.findByAssignedToUsername(username);
+
+    //     // Filtrar por sprint + solo tareas terminadas
+    //     double total = tasks.stream()
+    //             .filter(t -> t.getSprint() != null)
+    //             .filter(t -> Objects.equals(t.getSprint().getId(), sprint.getId()))
+    //             .filter(t -> "done".equalsIgnoreCase(t.getStatus()))
+    //             .filter(t -> t.getEffortHours() != null)
+    //             .mapToDouble(Task::getEffortHours)
+    //             .sum();
+
+    //     return total;
+    // }
+
 }

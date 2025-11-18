@@ -3,15 +3,20 @@ package com.springboot.MyTodoList.service;
 import com.springboot.MyTodoList.model.AppUser;
 import com.springboot.MyTodoList.model.Project;
 import com.springboot.MyTodoList.model.Sprint;
+import com.springboot.MyTodoList.dto.SprintHoursDTO;
+import com.springboot.MyTodoList.dto.SprintMemberHoursDTO;
 import com.springboot.MyTodoList.repository.AppUserRepository;
 import com.springboot.MyTodoList.repository.ProjectRepository;
 import com.springboot.MyTodoList.repository.SprintRepository;
+import com.springboot.MyTodoList.repository.TaskRepository;
+import com.springboot.MyTodoList.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +26,8 @@ public class SprintService {
     private final SprintRepository sprintRepository;
     private final ProjectRepository projectRepository;
     private final AppUserRepository userRepository;
+    private final TaskRepository taskRepository;
+    private final TeamRepository teamRepository;
     
     public Sprint createSprint(Sprint sprint, Long projectId, Long createdByUserId) {
         Project project = projectRepository.findById(projectId)
@@ -78,4 +85,36 @@ public class SprintService {
     public void deleteSprint(Long id) {
         sprintRepository.deleteById(id);
     }
+
+    public List<SprintHoursDTO> getGlobalSprintHoursByProject(Long projectId) {
+        List<Sprint> sprints = sprintRepository.findByProjectId(projectId);
+
+        return sprints.stream().map(sprint -> {
+            Double totalHours = taskRepository.getTotalHoursBySprint(sprint.getId());
+            if (totalHours == null) totalHours = 0.0;
+
+            return new SprintHoursDTO(
+                sprint.getId(),
+                sprint.getName(),
+                totalHours
+            );
+        }).collect(Collectors.toList());
+    }
+
+
+    public List<SprintHoursDTO> getSprintHoursByProject(Long projectId, String username) {
+        List<Sprint> sprints = sprintRepository.findByProjectId(projectId);
+
+        return sprints.stream().map(sprint -> {
+            Double totalHours = taskRepository.getUserDoneHoursBySprint(sprint.getId(), username);
+            if (totalHours == null) totalHours = 0.0;
+
+            return new SprintHoursDTO(
+                    sprint.getId(),
+                    sprint.getName(),
+                    totalHours
+            );
+        }).collect(Collectors.toList());
+    }
+
 }
