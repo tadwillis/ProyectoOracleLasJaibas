@@ -1,15 +1,16 @@
 package com.springboot.MyTodoList.controller;
 
 import com.springboot.MyTodoList.model.Task;
+import com.springboot.MyTodoList.model.AppUser;
 import com.springboot.MyTodoList.service.TaskService;
+import com.springboot.MyTodoList.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -17,6 +18,8 @@ import java.util.HashMap;
 public class TaskController {
     
     private final TaskService taskService;
+
+    private final TaskRepository taskRepository;
     
     @PostMapping
     public ResponseEntity<Task> createTask(
@@ -84,6 +87,30 @@ public class TaskController {
     @GetMapping("/kpiUser/tasks/{username}")
     public ResponseEntity<Map<String, Integer>> getKpiUserTasks(@PathVariable String username) {
         return ResponseEntity.ok(taskService.getKpiUserTasks(username));
+    }
+
+    @GetMapping("/kpiTeam/sprint/{sprintId}")
+    public ResponseEntity<?> getTasksBySprintWithUser(@PathVariable Long sprintId) {
+        List<Task> tasks = taskRepository.findBySprintIdAndStatus(sprintId, "done");
+        
+        List<Map<String, String>> rows = new ArrayList<>();
+
+        for (Task task : tasks) {
+            Map<String, String> row = new HashMap<>();
+            
+            AppUser user = task.getAssignedTo();
+
+            if (user != null) {
+                row.put("user", user.getFullName());
+            }
+            else {
+                row.put("user", "-");
+            }
+            row.put("task", task.getTitle());
+            rows.add(row);
+        }
+
+        return ResponseEntity.ok(rows);
     }
     
     @PutMapping("/{id}")

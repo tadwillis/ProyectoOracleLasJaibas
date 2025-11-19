@@ -57,12 +57,15 @@ function Dashboard() {
   const [selectedProjectHours, setSelectedProjectHours] = useState(null);
   const [selectedProjectGlobal, setSelectedProjectGlobal] = useState(null);
   const [selectedProjectTeam, setSelectedProjectTeam] = useState("");
+  const [selectedProjectTasks, setSelectedProjectTasks] = useState("");
   const [selectedTeamHours, setSelectedTeamHours] = useState("");
+  const [selectedSprintTasks, setSelectedSprintTasks] = useState("");
   const [teamSprintHoursMatrix, setTeamSprintHours] = useState(null);
   const [sprintGlobalHours, setSprintGlobalHours] = useState([]);
   const [sprintHoursList, setSprintHoursList] = useState([]);
   const [kpiHours, setKpiHours] = useState();
   const [kpiTasks, setKpiTasks] = useState();
+  const [sprintTasksTable, setSprintTasksTable] = useState(null);
   const [user, setUser] = useState();
   const username = localStorage.getItem('username') || 'Usuario';
 
@@ -231,6 +234,15 @@ function Dashboard() {
     setSprints(await res.json());
   }
 
+  async function loadSprintTasksTable(sprintId) {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`/api/tasks/kpiTeam/sprint/${sprintId}`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+    setSprintTasksTable(data);
+  }
 
   async function loadKPIUserHours() {
     try {
@@ -1030,7 +1042,91 @@ function Dashboard() {
                       )}
                     </Paper>
                   </Grid>
+                  
+                  {/* KPI Tareas por miembro del equipo por sprint */}
+                  <Grid item xs={12}>
+                    <Paper sx={{ p: 3, borderRadius: 3 }}>
+                      
+                      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                        Tareas por Sprint con Miembros del Equipo
+                      </Typography>
 
+                      {/* Selección de Proyecto */}
+                      <Box sx={{ mt: 2 }}>
+                        <TextField
+                          select
+                          fullWidth
+                          label="Selecciona Proyecto"
+                          value={selectedProjectTasks || ""}
+                          onChange={(e) => {
+                            const projectId = e.target.value
+                            setSelectedProjectTasks(projectId);
+                            loadSprintsByProject(projectId);
+                          }}
+                          SelectProps={{ native: true }}
+                        >
+                          <option value="" disabled>Selecciona...</option>
+                          {projects.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </TextField>
+                      </Box>
+
+                      {/* Selección de Sprint */}
+                      {selectedProjectTasks && (
+                        <Box sx={{ mt: 2 }}>
+                          <TextField
+                            select
+                            fullWidth
+                            label="Selecciona Sprint"
+                            value={selectedSprintTasks || ""}
+                            onChange={(e) => {
+                              const sprintId = e.target.value;
+                              setSelectedSprintTasks(sprintId);
+
+                              // cargar tabla
+                              loadSprintTasksTable(sprintId);
+                            }}
+                            SelectProps={{ native: true }}
+                          >
+                            <option value="" disabled>Selecciona...</option>
+                            {sprints.map(t => (
+                              <option key={t.id} value={t.id}>{t.name}</option>
+                            ))}
+                          </TextField>
+                        </Box>
+                      )}
+
+                      {/* TABLA */}
+                      {sprintTasksTable && (
+                        <Box sx={{ mt: 3 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                            Tabla de Tareas del Equipo por Sprint
+                          </Typography>
+
+                          <table style={{ width: "100%", marginTop: "15px", borderCollapse: "collapse" }}>
+                            <thead>
+                              <tr>
+                                <th style={{ textAlign: "left", padding: "6px" }}>Usuario</th>
+
+                                <th style={{ textAlign: "left", padding: "6px" }}>Tarea</th>
+                              </tr>
+                            </thead>
+
+                            <tbody>
+                              {sprintTasksTable.map((row, rowIndex) => (
+                                <tr key={rowIndex}>
+                                  <td style={{ padding: "6px", fontWeight: 600 }}>{row.user}</td>
+
+                                  <td style={{ padding: "6px", fontWeight: 600 }}>{row.task}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </Box>
+                      )}
+                    </Paper>
+                  </Grid>
                 </Grid>
               </Grid>
             </Grid>

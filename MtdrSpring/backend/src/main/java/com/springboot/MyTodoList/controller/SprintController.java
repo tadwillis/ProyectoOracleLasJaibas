@@ -4,7 +4,6 @@ import com.springboot.MyTodoList.model.Sprint;
 import com.springboot.MyTodoList.model.AppUser;
 import com.springboot.MyTodoList.model.TeamMember;
 import com.springboot.MyTodoList.dto.SprintHoursDTO;
-import com.springboot.MyTodoList.dto.SprintMemberHoursDTO;
 import com.springboot.MyTodoList.repository.SprintRepository;
 import com.springboot.MyTodoList.repository.TaskRepository;
 import com.springboot.MyTodoList.repository.TeamMemberRepository;
