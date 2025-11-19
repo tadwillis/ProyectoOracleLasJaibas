@@ -23,6 +23,7 @@ const MOTION = {
 };
 // ---------------------------------------------------------------------
 
+
 const fadeInUp = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0, transition: { duration: MOTION.enter, ease: [0.16, 1, 0.3, 1] } },
@@ -83,6 +84,97 @@ function Dashboard() {
     { name: "Badge Cloud Native", value: 100 },
     { name: "OCI DevOps", value: 0 },
   ]);
+
+//grafica kpi desempeño en horas
+  const estimatedHours = Number(kpiHours?.totalEstimatedHours ?? 0);
+  const realHours = Number(kpiHours?.totalEffortHours ?? 0);
+  const hoursEfficiency = Number(kpiHours?.efficiency ?? 0);
+
+  const maxHours = Math.max(estimatedHours, realHours, 1); 
+
+  const HOURS_MAX_BAR_HEIGHT = 90; 
+  const estimatedBarHeight = (estimatedHours / maxHours) * HOURS_MAX_BAR_HEIGHT;
+  const realBarHeight = (realHours / maxHours) * HOURS_MAX_BAR_HEIGHT;
+//--------------------------------------------------------------------
+  const userSprintChartWidth = Math.max(260, 80 + sprintHoursList.length * 60);
+  const maxUserSprintHours = sprintHoursList.reduce((max, s) => {
+    const h = Number(s.totalHours ?? 0);
+    return h > max ? h : max;
+  }, 0);
+
+
+  // --- Máximo de horas globales por sprint (para escalar las barras) ---
+  const maxGlobalSprintHours = sprintGlobalHours.reduce((max, s) => {
+  const h = Number(s.totalHours ?? 0);
+  return h > max ? h : max;
+  }, 0);
+
+  // --- Máximo de horas del equipo por sprint (para escalar las barras) ---
+  const maxTeamSprintHours = teamSprintHoursMatrix
+    ? teamSprintHoursMatrix.rows.reduce((max, row) => {
+        return row.hours.reduce((m2, h) => {
+          const val = Number(h ?? 0);
+          return val > m2 ? val : m2;
+        }, max);
+      }, 0)
+    : 0;
+
+  const teamSprintChartWidth = teamSprintHoursMatrix
+    ? Math.max(
+        260,
+        80 +
+          teamSprintHoursMatrix.sprints.length *
+            (40 + teamSprintHoursMatrix.rows.length * 18)
+      )
+    : 260;
+
+  const TEAM_BASE_COLORS = [
+    '#4caf50', 
+    '#2196f3', 
+    '#ff9800', 
+    '#ab47bc', 
+    '#f44336', 
+    '#00897b', 
+  ];
+  const getMemberColor = (index, totalMembers) => {
+    if (index < TEAM_BASE_COLORS.length) {
+      return TEAM_BASE_COLORS[index];
+    }
+    const hue = Math.round((index / Math.max(totalMembers, 1)) * 360);
+    return `hsl(${hue}, 65%, 50%)`;
+  };
+
+
+
+  const globalSprintChartWidth = Math.max(260, 80 + sprintGlobalHours.length * 60);
+
+// grafica kpi desempeño en tareas
+  const plannedTasks = Number(kpiTasks?.totalPlannedTasks ?? 0);
+  const doneTasks = Number(kpiTasks?.totalDoneTasks ?? 0);
+  const tasksEfficiency = Number(kpiTasks?.efficiency ?? 0);
+
+  const pendingTasks = Math.max(plannedTasks - doneTasks, 0);
+
+  const donePercentOfPlan =
+  plannedTasks > 0 ? Math.min((doneTasks / plannedTasks) * 100, 100) : 0;
+
+  const DONUT_RADIUS = 36;
+  const DONUT_CIRC = 2 * Math.PI * DONUT_RADIUS;
+  const DONUT_OFFSET = DONUT_CIRC - (donePercentOfPlan / 100) * DONUT_CIRC;
+
+
+  const tasksKpiChartData = kpiTasks
+    ? [
+        {
+          name: 'Terminadas',
+          value: doneTasks,
+        },
+        {
+          name: 'Pendientes',
+          value: pendingTasks,
+        },
+      ]
+    : [];
   // =======================================================
 
   async function loadUser() {
@@ -128,7 +220,7 @@ function Dashboard() {
     });
 
     const data = await res.json();
-    setTeamSprintHours(data);   //  👈 guarda { sprints, rows }
+    setTeamSprintHours(data); 
   }
 
   async function loadSprintsByProject(projectId) {
@@ -224,6 +316,7 @@ function Dashboard() {
   const underlineProps = prefersReducedMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1, transition: { duration: MOTION.reduced } } }
     : { initial: { scaleX: 0 }, animate: { scaleX: 1, transition: { duration: MOTION.underline } }, style: { originX: 0 } };
+    
 
   // ------------ UI -----------------
   return (
@@ -304,26 +397,70 @@ function Dashboard() {
 
                         {kpiTasks ? (
                           <Box sx={{ mt: 2 }}>
-                            <Typography variant="body2">
-                              <b>Total planeadas:</b> {kpiTasks.totalPlannedTasks} tareas
-                            </Typography>
-                            <Typography variant="body2">
-                              <b>Total terminadas:</b> {kpiTasks.totalDoneTasks} tareas
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                              <Typography variant="body2" sx={{ fontWeight: 700 }}>Eficiencia:</Typography>
-                              <Chip
-                                label={`${kpiTasks.efficiency.toFixed(1)}%`}
-                                color={kpiTasks.efficiency >= 100 ? 'success' : 'warning'}
-                                sx={{ fontWeight: 700 }}
-                              />
-                            </Box>
+                            <Grid container spacing={2} alignItems="center">
+                              {/* Resumen textual a la izquierda */}
+                              <Grid item xs={12} md={5}>
+                                <Typography variant="body2">
+                                  <b>Total planeadas:</b> {kpiTasks.totalPlannedTasks} tareas
+                                </Typography>
+                                <Typography variant="body2">
+                                  <b>Total terminadas:</b> {kpiTasks.totalDoneTasks} tareas
+                                </Typography>
 
-                            <LinearProgress
-                              variant="determinate"
-                              value={Math.min(kpiTasks.efficiency, 100)}
-                              sx={{ mt: 2, height: 8, borderRadius: 2, '& .MuiLinearProgress-bar': { transition: `width ${MOTION.muiProgressMs}ms ease` } }}
-                            />
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                    Eficiencia:
+                                  </Typography>
+                                  <Chip
+                                    label={`${tasksEfficiency.toFixed(1)}%`}
+                                    color={tasksEfficiency >= 100 ? 'success' : 'warning'}
+                                    sx={{ fontWeight: 700 }}
+                                  />
+                                </Box>
+                              </Grid>
+
+                              {/* Gráfico de dona a la derecha*/}
+                              <Grid item xs={12} md={7}>
+                                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mt: 1 }}>
+                                  <svg width="180" height="180" viewBox="0 0 120 120">
+                                    {/* Círculo de fondo (pendientes) */}
+                                    <circle
+                                      cx="60"
+                                      cy="60"
+                                      r={DONUT_RADIUS}
+                                      stroke="#e0e0e0"
+                                      strokeWidth="12"
+                                      fill="none"
+                                    />
+                                    {/* Arco de tareas terminadas */}
+                                    <circle
+                                      cx="60"
+                                      cy="60"
+                                      r={DONUT_RADIUS}
+                                      stroke="#4caf50"
+                                      strokeWidth="12"
+                                      fill="none"
+                                      strokeDasharray={`${DONUT_CIRC} ${DONUT_CIRC}`}
+                                      strokeDashoffset={DONUT_OFFSET}
+                                      strokeLinecap="round"
+                                      transform="rotate(-90 60 60)"
+                                    />
+                                    {/* Texto central */}
+                                    <text
+                                      x="50%"
+                                      y="50%"
+                                      textAnchor="middle"
+                                      dominantBaseline="central"
+                                      fontSize="18"
+                                      fontWeight="700"
+                                      fill="#333"
+                                    >
+                                      {`${donePercentOfPlan.toFixed(0)}%`}
+                                    </text>
+                                  </svg>
+                                </Box>
+                              </Grid>
+                            </Grid>
                           </Box>
                         ) : (
                           <Typography variant="body2" sx={{ mt: 2 }} color="text.secondary">
@@ -349,24 +486,116 @@ function Dashboard() {
                           Comparativa de horas estimadas vs reales
                         </Typography>
 
-                        {kpiHours ? (
+                        { kpiHours ? (
                           <Box sx={{ mt: 2 }}>
-                            <Typography variant="body2"><b>Total estimado:</b> {kpiHours.totalEstimatedHours.toFixed(2)} h</Typography>
-                            <Typography variant="body2"><b>Total real:</b> {kpiHours.totalEffortHours.toFixed(2)} h</Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                              <Typography variant="body2" sx={{ fontWeight: 700 }}>Eficiencia:</Typography>
-                              <Chip
-                                label={`${kpiHours.efficiency.toFixed(1)}%`}
-                                color={kpiHours.efficiency >= 100 ? 'warning' : 'success'}
-                                sx={{ fontWeight: 700 }}
-                              />
-                            </Box>
+                            <Grid container spacing={2} alignItems="center">
+                              {/* Resumen textual a la izquierda */}
+                              <Grid item xs={12} md={5}>
+                                <Typography variant="body2">
+                                  <b>Total estimado:</b> {estimatedHours.toFixed(2)} h
+                                </Typography>
+                                <Typography variant="body2">
+                                  <b>Total real:</b> {realHours.toFixed(2)} h
+                                </Typography>
 
-                            <LinearProgress
-                              variant="determinate"
-                              value={Math.min(kpiHours.efficiency, 100)}
-                              sx={{ mt: 2, height: 8, borderRadius: 2, '& .MuiLinearProgress-bar': { transition: `width ${MOTION.muiProgressMs}ms ease` } }}
-                            />
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                    Eficiencia:
+                                  </Typography>
+                                  <Chip
+                                    label={`${hoursEfficiency.toFixed(1)}%`}
+                                    color={hoursEfficiency >= 100 ? 'warning' : 'success'}
+                                    sx={{ fontWeight: 700 }}
+                                  />
+                                </Box>
+                              </Grid>
+
+                              {/* Gráfico de barras verticales con ejes (SVG) */}
+                              <Grid item xs={12} md={7}>
+                                <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center' }}>
+                                  <svg width="220" height="160" viewBox="0 0 220 160">
+                                    {/* Eje Y */}
+                                    <line
+                                      x1="40"
+                                      y1="20"
+                                      x2="40"
+                                      y2="130"
+                                      stroke="#bdbdbd"
+                                      strokeWidth="1"
+                                    />
+                                    {/* Eje X */}
+                                    <line
+                                      x1="40"
+                                      y1="130"
+                                      x2="200"
+                                      y2="130"
+                                      stroke="#bdbdbd"
+                                      strokeWidth="1"
+                                    />
+
+                                    {/* Barra de horas estimadas */}
+                                    <rect
+                                      x="80"
+                                      y={130 - estimatedBarHeight}
+                                      width="30"
+                                      height={estimatedBarHeight}
+                                      fill="#2196f3"
+                                      rx="4"
+                                    />
+
+                                    {/* Barra de horas reales */}
+                                    <rect
+                                      x="140"
+                                      y={130 - realBarHeight}
+                                      width="30"
+                                      height={realBarHeight}
+                                      fill="#4caf50"
+                                      rx="4"
+                                    />
+
+                                    {/* Etiquetas debajo de las barras */}
+                                    <text
+                                      x="95"
+                                      y="145"
+                                      textAnchor="middle"
+                                      fontSize="11"
+                                      fill="#555"
+                                    >
+                                      Estimadas
+                                    </text>
+                                    <text
+                                      x="155"
+                                      y="145"
+                                      textAnchor="middle"
+                                      fontSize="11"
+                                      fill="#555"
+                                    >
+                                      Reales
+                                    </text>
+
+                                    {/* Valores encima de las barras */}
+                                    <text
+                                      x="95"
+                                      y={130 - estimatedBarHeight - 6}
+                                      textAnchor="middle"
+                                      fontSize="10"
+                                      fill="#333"
+                                    >
+                                      {estimatedHours.toFixed(1)}h
+                                    </text>
+                                    <text
+                                      x="155"
+                                      y={130 - realBarHeight - 6}
+                                      textAnchor="middle"
+                                      fontSize="10"
+                                      fill="#333"
+                                    >
+                                      {realHours.toFixed(1)}h
+                                    </text>
+                                  </svg>
+                                </Box>
+                              </Grid>
+                            </Grid>
                           </Box>
                         ) : (
                           <Typography variant="body2" sx={{ mt: 2 }} color="text.secondary">
@@ -376,7 +605,6 @@ function Dashboard() {
                       </Paper>
                     </motion.div>
                   </Grid>
-
                   {/* KPI Horas por sprint y usuario*/}
                   <Grid item xs={12}>
                     <Paper sx={{ p: 3, borderRadius: 3 }}>
@@ -391,7 +619,7 @@ function Dashboard() {
                           onChange={(e) => {
                             const projectId = e.target.value;
                             setSelectedProjectHours(projectId);
-                            loadSprintHours(projectId); // 👈 carga los sprints + horas
+                            loadSprintHours(projectId);
                           }}
                           SelectProps={{ native: true }}
                           fullWidth
@@ -411,28 +639,94 @@ function Dashboard() {
                             Horas trabajadas por sprint
                           </Typography>
 
-                          <table style={{ width: "100%", marginTop: "15px" }}>
-                            <thead>
-                              <tr>
-                                <th style={{ textAlign: "left" }}>Sprint</th>
-                                <th style={{ textAlign: "left" }}>Horas Totales</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {sprintHoursList.map((s) => (
-                                <tr key={s.sprintId}>
-                                  <td>{s.sprintName}</td>
-                                  <td>{s.totalHours.toFixed(2)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                          <Box
+                            sx={{
+                              mt: 2,
+                              display: 'flex',
+                              justifyContent: 'center',
+                              overflowX: 'auto',
+                            }}
+                          >
+                            <svg
+                              width={userSprintChartWidth}
+                              height={200}
+                              viewBox={`0 0 ${userSprintChartWidth} 200`}
+                            >
+                              {/* Ejes */}
+                              <line
+                                x1="50"
+                                y1="20"
+                                x2="50"
+                                y2="160"
+                                stroke="#bdbdbd"
+                                strokeWidth="1"
+                              />
+                              <line
+                                x1="50"
+                                y1="160"
+                                x2={userSprintChartWidth - 20}
+                                y2="160"
+                                stroke="#bdbdbd"
+                                strokeWidth="1"
+                              />
+
+                              {/* Barras por sprint */}
+                              {sprintHoursList.map((s, index) => {
+                                const hours = Number(s.totalHours ?? 0);
+                                const plotHeight = 120;
+                                const barHeight =
+                                  maxUserSprintHours > 0
+                                    ? (hours / maxUserSprintHours) * plotHeight
+                                    : 0;
+
+                                const barWidth = 30;
+                                const gap = 30;
+                                const x =
+                                  50 + gap + index * (barWidth + gap);
+                                const y = 160 - barHeight;
+
+                                return (
+                                  <g key={s.sprintId}>
+                                    {/* Barra */}
+                                    <rect
+                                      x={x}
+                                      y={y}
+                                      width={barWidth}
+                                      height={barHeight}
+                                      fill="#2e5e73"
+                                      rx="4"
+                                    />
+
+                                    {/* Valor encima de la barra */}
+                                    <text
+                                      x={x + barWidth / 2}
+                                      y={y - 6}
+                                      textAnchor="middle"
+                                      fontSize="10"
+                                      fill="#333"
+                                    >
+                                      {hours.toFixed(1)}h
+                                    </text>
+
+                                    {/* Nombre del sprint en el eje X */}
+                                    <text
+                                      x={x + barWidth / 2}
+                                      y={175}
+                                      textAnchor="middle"
+                                      fontSize="10"
+                                      fill="#555"
+                                    >
+                                      {s.sprintName}
+                                    </text>
+                                  </g>
+                                );
+                              })}
+                            </svg>
+                          </Box>
                         </Box>
                       )}
                     </Paper>
                   </Grid>
-
-
                   {/* KPI Horas globales por sprint y usuario */}
                   <Grid item xs={12}>
                     <Paper sx={{ p: 3, borderRadius: 3 }}>
@@ -447,7 +741,7 @@ function Dashboard() {
                           onChange={(e) => {
                             const projectId = e.target.value;
                             setSelectedProjectGlobal(projectId);
-                            loadGlobalSprintHours(projectId); // 👈 carga los sprints + horas
+                            loadGlobalSprintHours(projectId);
                           }}
                           SelectProps={{ native: true }}
                           fullWidth
@@ -463,25 +757,93 @@ function Dashboard() {
                       {sprintGlobalHours.length > 0 && (
                         <Box sx={{ mt: 3 }}>
                           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                            Horas trabajadas por sprint
+                            Horas trabajadas por sprint (global)
                           </Typography>
 
-                          <table style={{ width: "100%", marginTop: "15px" }}>
-                            <thead>
-                              <tr>
-                                <th style={{ textAlign: "left" }}>Sprint</th>
-                                <th style={{ textAlign: "left" }}>Horas Totales</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {sprintGlobalHours.map((s) => (
-                                <tr key={s.sprintId}>
-                                  <td>{s.sprintName}</td>
-                                  <td>{s.totalHours.toFixed(2)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                          <Box
+                            sx={{
+                              mt: 2,
+                              display: 'flex',
+                              justifyContent: 'center',
+                              overflowX: 'auto',
+                            }}
+                          >
+                            <svg
+                              width={globalSprintChartWidth}
+                              height={200}
+                              viewBox={`0 0 ${globalSprintChartWidth} 200`}
+                            >
+                              {/* Ejes */}
+                              <line
+                                x1="50"
+                                y1="20"
+                                x2="50"
+                                y2="160"
+                                stroke="#bdbdbd"
+                                strokeWidth="1"
+                              />
+                              <line
+                                x1="50"
+                                y1="160"
+                                x2={globalSprintChartWidth - 20}
+                                y2="160"
+                                stroke="#bdbdbd"
+                                strokeWidth="1"
+                              />
+
+                              {/* Barras por sprint (GLOBAL) */}
+                              {sprintGlobalHours.map((s, index) => {
+                                const hours = Number(s.totalHours ?? 0);
+                                const plotHeight = 120;
+                                const barHeight =
+                                  maxGlobalSprintHours > 0
+                                    ? (hours / maxGlobalSprintHours) * plotHeight
+                                    : 0;
+
+                                const barWidth = 30;
+                                const gap = 30;
+                                const x =
+                                  50 + gap + index * (barWidth + gap);
+                                const y = 160 - barHeight;
+
+                                return (
+                                  <g key={s.sprintId}>
+                                    {/* Barra */}
+                                    <rect
+                                      x={x}
+                                      y={y}
+                                      width={barWidth}
+                                      height={barHeight}
+                                      fill="#f84600" 
+                                      rx="4"
+                                    />
+
+                                    {/* Valor encima de la barra */}
+                                    <text
+                                      x={x + barWidth / 2}
+                                      y={y - 6}
+                                      textAnchor="middle"
+                                      fontSize="10"
+                                      fill="#333"
+                                    >
+                                      {hours.toFixed(1)}h
+                                    </text>
+
+                                    {/* Nombre del sprint en el eje X */}
+                                    <text
+                                      x={x + barWidth / 2}
+                                      y={175}
+                                      textAnchor="middle"
+                                      fontSize="10"
+                                      fill="#555"
+                                    >
+                                      {s.sprintName}
+                                    </text>
+                                  </g>
+                                );
+                              })}
+                            </svg>
+                          </Box>
                         </Box>
                       )}
                     </Paper>
@@ -494,7 +856,6 @@ function Dashboard() {
                       <Typography variant="h6" sx={{ fontWeight: 700 }}>
                         Horas por Sprint por cada Miembro del Equipo
                       </Typography>
-
                       {/* Selección de Proyecto */}
                       <Box sx={{ mt: 2 }}>
                         <TextField
@@ -543,37 +904,130 @@ function Dashboard() {
                       {teamSprintHoursMatrix && (
                         <Box sx={{ mt: 3 }}>
                           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                            Tabla de Horas del Equipo
+                            Horas del equipo por sprint
                           </Typography>
+                          <Box
+                            sx={{
+                              mt: 2,
+                              display: 'flex',
+                              justifyContent: 'center',
+                              overflowX: 'auto',
+                            }}
+                          >
+                            <svg
+                              width={teamSprintChartWidth}
+                              height={230}
+                              viewBox={`0 0 ${teamSprintChartWidth} 230`}
+                            >
+                              {/* Ejes */}
+                              <line
+                                x1="60"
+                                y1="20"
+                                x2="60"
+                                y2="180"
+                                stroke="#bdbdbd"
+                                strokeWidth="1"
+                              />
+                              <line
+                                x1="60"
+                                y1="180"
+                                x2={teamSprintChartWidth - 20}
+                                y2="180"
+                                stroke="#bdbdbd"
+                                strokeWidth="1"
+                              />
+                              {/* Barras agrupadas por sprint */}
+                              {teamSprintHoursMatrix.sprints.map((sprintName, sprintIdx) => {
+                                const barWidth = 12;
+                                const barGap = 4;
+                                const plotHeight = 140;
+                                const baseY = 180;
 
-                          <table style={{ width: "100%", marginTop: "15px", borderCollapse: "collapse" }}>
-                            <thead>
-                              <tr>
-                                <th style={{ textAlign: "left", padding: "6px" }}>Usuario</th>
+                                const groupWidth =
+                                  teamSprintHoursMatrix.rows.length * (barWidth + barGap);
+                                const groupStartX =
+                                  60 + 24 + sprintIdx * (groupWidth + 24);
+                                return (
+                                  <g key={sprintName}>
+                                    {teamSprintHoursMatrix.rows.map((row, userIdx) => {
+                                      const hoursVal = Number(row.hours[sprintIdx] ?? 0);
+                                      const barHeight =
+                                        maxTeamSprintHours > 0
+                                          ? (hoursVal / maxTeamSprintHours) * plotHeight
+                                          : 0;
 
-                                {teamSprintHoursMatrix.sprints.map((sprintName, idx) => (
-                                  <th key={idx} style={{ textAlign: "left", padding: "6px" }}>
-                                    {sprintName}
-                                  </th>
-                                ))}
-                              </tr>
-                            </thead>
+                                      const x =
+                                        groupStartX + userIdx * (barWidth + barGap);
+                                      const y = baseY - barHeight;
 
-                            <tbody>
-                              {teamSprintHoursMatrix.rows.map((row, rowIndex) => (
-                                <tr key={rowIndex}>
-                                  <td style={{ padding: "6px", fontWeight: 600 }}>{row.user}</td>
+                                      return (
+                                        <g key={`${row.user}-${sprintIdx}`}>
+                                          <rect
+                                            x={x}
+                                            y={y}
+                                            width={barWidth}
+                                            height={barHeight}
+                                            fill={getMemberColor(userIdx, teamSprintHoursMatrix.rows.length)} 
+                                            rx="3"
+                                          />
+                                          {barHeight > 10 && (
+                                            <text
+                                              x={x + barWidth / 2}
+                                              y={y - 4}
+                                              textAnchor="middle"
+                                              fontSize="9"
+                                              fill="#333"
+                                            >
+                                              {hoursVal.toFixed(1)}
+                                            </text>
+                                          )}
+                                        </g>
+                                      );
+                                    })}
 
-                                  {row.hours.map((h, hIdx) => (
-                                    <td key={hIdx} style={{ padding: "6px" }}>{h}</td>
-                                  ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                                    {/* Nombre del sprint en el eje X (centro del grupo) */}
+                                    <text
+                                      x={groupStartX + groupWidth / 2}
+                                      y={200}
+                                      textAnchor="middle"
+                                      fontSize="10"
+                                      fill="#555"
+                                    >
+                                      {sprintName}
+                                    </text>
+                                  </g>
+                                );
+                              })}
+                            </svg>
+                          </Box>
+
+                          {/* Leyenda de usuarios*/}
+                          <Box sx={{ mt: 1.5 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Orden de barras por sprint:
+                            </Typography>
+                            {teamSprintHoursMatrix.rows.map((row, idx) => (
+                              <Box
+                                key={row.user}
+                                sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}
+                              >
+                                <Box
+                                  sx={{
+                                    width: 12,
+                                    height: 12,
+                                    borderRadius: 2,
+                                    bgcolor: getMemberColor(idx, teamSprintHoursMatrix.rows.length),
+                                    mr: 1,
+                                  }}
+                                />
+                                <Typography variant="caption">
+                                  {idx + 1}. {row.user}
+                                </Typography>
+                              </Box>
+                            ))}
+                          </Box>
                         </Box>
                       )}
-
                     </Paper>
                   </Grid>
 
