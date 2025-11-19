@@ -164,7 +164,7 @@ public class TaskService {
         Map<String, Integer> kpi = new HashMap<>();
         kpi.put("totalPlannedTasks", totalPlanned);
         kpi.put("totalDoneTasks", totalDone);
-        kpi.put("efficiency", totalPlanned == 0 ? 0 : (totalDone / totalPlanned) * 100);
+        kpi.put("efficiency", totalPlanned == 0 ? 0 : (totalDone * 100) / totalPlanned);
 
         return kpi;
     }
