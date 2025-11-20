@@ -217,14 +217,14 @@ public class AppUserService {
         AppUser user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + userId));
         
-        if (!newRole.equals("USER") && !newRole.equals("ADMIN")) {
-            throw new IllegalArgumentException("Rol inválido. Use 'USER' o 'ADMIN'");
+        if (!newRole.equals("USER") && !newRole.equals("ADMIN") && !newRole.equals("MANAGER")) {
+            throw new IllegalArgumentException("Rol inválido. Use 'USER', 'ADMIN' o 'MANAGER'");
         }
         
         // Validar que no se elimine el último admin
-        if (user.getRole().equals("ADMIN") && !newRole.equals("ADMIN")) {
+        if ((user.getRole().equals("ADMIN") || user.getRole().equals("MANAGER")) && (!newRole.equals("ADMIN") && !newRole.equals("MANAGER"))) {
             long adminCount = userRepository.findAll().stream()
-                .filter(u -> u.getRole().equals("ADMIN"))
+                .filter(u -> u.getRole().equals("ADMIN") || u.getRole().equals("MANAGER"))
                 .count();
             
             if (adminCount <= 1) {

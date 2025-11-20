@@ -12,6 +12,9 @@ import Teams from "./components/Teams";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute"; // Importar AdminRoute
 import Admin from "./components/Admin"; // Importar Admin
+import ManagerRoute from "./components/ManagerRoute";
+import ManagerUsers from "./components/ManagerUsers";
+import UserDetails from "./components/UserDetails";
 import Inicio from "./components/Inicio";
 
 function App() {
@@ -29,6 +32,24 @@ function App() {
             <AdminRoute>
               <Admin />
             </AdminRoute>
+          }
+        />
+
+        {/* Ruta de Manager */}
+        <Route
+          path="/manager/users"
+          element={
+            <ManagerRoute>
+              <ManagerUsers />
+            </ManagerRoute>
+          }
+        />
+        <Route
+          path="/manager/user/:userId"
+          element={
+            <ManagerRoute>
+              <UserDetails />
+            </ManagerRoute>
           }
         />
 

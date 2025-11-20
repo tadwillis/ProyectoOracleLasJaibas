@@ -102,6 +102,15 @@ export default function TopBar() {
               Admin
             </Button>
           )}
+          {(userRole === 'MANAGER' || userRole === 'ADMIN') && (
+            <Button
+              component={NavLink}
+              to="/manager/users"
+              sx={activeStyle}
+            >
+              Manager
+            </Button>
+          )}
         </Box>
 
         {/* User Menu */}
