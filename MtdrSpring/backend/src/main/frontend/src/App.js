@@ -13,6 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute"; // Importar AdminRoute
 import Admin from "./components/Admin"; // Importar Admin
 import Inicio from "./components/Inicio";
+import BacklogAnalysis from "./components/BacklogAnalysis";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
             </AdminRoute>
           }
         />
+        
 
         {/* Privadas */}
         <Route
@@ -38,6 +40,15 @@ function App() {
           element={
             <ProtectedRoute>       
               <Inicio />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/backlog-analysis"
+          element={
+            <ProtectedRoute>
+              <BacklogAnalysis />
             </ProtectedRoute>
           }
         />
