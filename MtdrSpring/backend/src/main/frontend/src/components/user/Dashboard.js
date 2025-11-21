@@ -1,13 +1,13 @@
 // Dashboard.js
 import React, { useState, useEffect } from 'react';
 import {
-  Paper, LinearProgress, Typography, Box, Grid, Divider, Avatar, Chip,
-  IconButton, TextField, Tooltip, Slider
+  Paper, Typography, Box, Grid, Divider, Avatar, Chip,
+  IconButton, TextField, Tooltip
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import TopBar from '../components/TopBar';
+import TopBar from '../shared/TopBar';
 import { motion, useReducedMotion } from 'framer-motion';
 
 // ----------------- Tiempos -----------------
@@ -68,25 +68,6 @@ function Dashboard() {
   const [sprintTasksTable, setSprintTasksTable] = useState(null);
   const [user, setUser] = useState();
   const username = localStorage.getItem('username') || 'Usuario';
-
-  // ====== Estados locales solo de UI (sin backend) ======
-  const [aboutMe, setAboutMe] = useState("Estudiante de ingeniería en sistemas, apasionado por la nube y DevOps.");
-  const [aboutMeEditing, setAboutMeEditing] = useState(false);
-  const [aboutMeDraft, setAboutMeDraft] = useState(aboutMe);
-
-  const [expYears, setExpYears] = useState("1 año en Oracle Academy");
-  const [expYearsEditing, setExpYearsEditing] = useState(false);
-  const [expYearsDraft, setExpYearsDraft] = useState(expYears);
-
-  const [skills, setSkills] = useState("Backend con Spring Boot y automatización en la nube.");
-  const [skillsEditing, setSkillsEditing] = useState(false);
-  const [skillsDraft, setSkillsDraft] = useState(skills);
-
-  const [courses, setCourses] = useState([
-    { name: "Certificación OCI Foundations", value: 100 },
-    { name: "Badge Cloud Native", value: 100 },
-    { name: "OCI DevOps", value: 0 },
-  ]);
 
 //grafica kpi desempeño en horas
   const estimatedHours = Number(kpiHours?.totalEstimatedHours ?? 0);
@@ -166,18 +147,6 @@ function Dashboard() {
   const DONUT_OFFSET = DONUT_CIRC - (donePercentOfPlan / 100) * DONUT_CIRC;
 
 
-  const tasksKpiChartData = kpiTasks
-    ? [
-        {
-          name: 'Terminadas',
-          value: doneTasks,
-        },
-        {
-          name: 'Pendientes',
-          value: pendingTasks,
-        },
-      ]
-    : [];
   // =======================================================
 
   async function loadUser() {
@@ -296,31 +265,7 @@ function Dashboard() {
     loadProjects();
     loadTeams();
     loadUser();
-  }, []);
-
-  const GreyEditBtn = ({ onClick, label }) => (
-    <Tooltip title={`Editar ${label}`} arrow>
-      <IconButton size="small" onClick={onClick} sx={{ color: '#9e9e9e', ml: 1 }}>
-        <EditIcon fontSize="small" />
-      </IconButton>
-    </Tooltip>
-  );
-
-  const SaveBtn = ({ onClick }) => (
-    <Tooltip title="Guardar" arrow>
-      <IconButton size="small" onClick={onClick} sx={{ color: '#4caf50', ml: 0.5 }}>
-        <CheckIcon fontSize="small" />
-      </IconButton>
-    </Tooltip>
-  );
-
-  const CancelBtn = ({ onClick }) => (
-    <Tooltip title="Cancelar" arrow>
-      <IconButton size="small" onClick={onClick} sx={{ color: '#b0b0b0', ml: 0.5 }}>
-        <CloseIcon fontSize="small" />
-      </IconButton>
-    </Tooltip>
-  );
+  }, [loadKPIUserHours, loadKPIUserTasks, loadUser]);
 
   // === Preferencias de accesibilidad (reduce motion) ===
   const prefersReducedMotion = useReducedMotion();

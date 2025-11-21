@@ -1,7 +1,7 @@
 // src/components/Inicio.js
 import React, { useState, useEffect } from 'react';
-import TopBar from './TopBar';
-import API_LIST from '../API';
+import TopBar from '../shared/TopBar';
+import API_LIST from '../../API';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   Box,

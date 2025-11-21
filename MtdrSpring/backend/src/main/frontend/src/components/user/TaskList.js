@@ -1,6 +1,6 @@
 // TaskList.js
 import React, { useState, useEffect } from 'react';
-import API_LIST from '../API';
+import API_LIST from '../../API';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {
@@ -8,7 +8,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Chip, IconButton
 } from '@mui/material';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import TopBar from '../components/TopBar';
+import TopBar from '../shared/TopBar';
 import { motion, useReducedMotion } from 'framer-motion';
 
 // ----------------- Tiempos -----------------

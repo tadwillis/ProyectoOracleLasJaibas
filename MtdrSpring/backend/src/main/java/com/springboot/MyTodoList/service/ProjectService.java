@@ -45,6 +45,10 @@ public class ProjectService {
     public List<Project> getProjectsByTeam(Long teamId) {
         return projectRepository.findByTeamId(teamId);
     }
+
+    public List<Project> getProjectsByUserId(Long userId) {
+        return projectRepository.findByUserId(userId);
+    }
     
     public Project updateProject(Long id, Project projectDetails) {
         Project project = projectRepository.findById(id)

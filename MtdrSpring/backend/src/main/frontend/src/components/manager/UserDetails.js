@@ -16,7 +16,7 @@ import {
   ListItemText,
   Divider
 } from '@mui/material';
-import TopBar from './TopBar';
+import TopBar from '../shared/TopBar';
 
 const API_BASE = 'http://localhost:8080/api';
 

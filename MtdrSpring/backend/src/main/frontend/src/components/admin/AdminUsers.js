@@ -41,7 +41,7 @@ import {
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon
 } from '@mui/icons-material';
-import TopBar from './TopBar';
+import TopBar from '../shared/TopBar';
 
 const API_BASE = 'http://localhost:8080/api';
 

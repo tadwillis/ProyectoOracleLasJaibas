@@ -10,7 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Button,
   IconButton,
   Box,
   Alert,
@@ -32,7 +31,7 @@ import {
   Refresh as RefreshIcon,
   Work as WorkIcon
 } from '@mui/icons-material';
-import TopBar from './TopBar';
+import TopBar from '../shared/TopBar';
 import { useNavigate } from 'react-router-dom';
 
 const API_BASE = 'http://localhost:8080/api/manager';

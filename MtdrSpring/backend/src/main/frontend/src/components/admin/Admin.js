@@ -22,11 +22,10 @@ import {
   Group as GroupIcon,
   Assignment as ProjectIcon,
   Settings as SettingsIcon,
-  Analytics as AnalyticsIcon,
   Security as SecurityIcon,
   Storage as DatabaseIcon
 } from '@mui/icons-material';
-import TopBar from './TopBar';
+import TopBar from '../shared/TopBar';
 import AdminUsers from './AdminUsers'; // Importar el nuevo componente
 
 // Componente para el panel de tabs
