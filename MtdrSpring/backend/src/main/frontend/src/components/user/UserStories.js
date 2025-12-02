@@ -10,7 +10,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import TopBar from './TopBar';
+import TopBar from '../shared/TopBar';
 import { motion, useReducedMotion } from 'framer-motion';
 
 // ----------------- Tiempos  -----------------

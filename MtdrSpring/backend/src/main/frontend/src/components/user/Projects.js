@@ -13,7 +13,7 @@ import FolderIcon from '@mui/icons-material/Folder';
 import GroupIcon from '@mui/icons-material/Group';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
-import TopBar from './TopBar';
+import TopBar from '../shared/TopBar';
 import { motion, useReducedMotion } from 'framer-motion';
 
 // ----------------- Tiempos  -----------------

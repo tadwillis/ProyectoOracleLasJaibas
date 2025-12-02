@@ -60,6 +60,10 @@ public class SprintService {
         return sprintRepository.findActiveSprintsByTeamId(teamId);
     }
     
+    public List<Sprint> getSprintsByUserId(Long userId) {
+        return sprintRepository.findByUserId(userId);
+    }
+
     public Sprint updateSprint(Long id, Sprint sprintDetails) {
         Sprint sprint = sprintRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Sprint not found"));

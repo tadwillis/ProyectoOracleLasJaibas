@@ -41,6 +41,11 @@ public class ProjectController {
     public ResponseEntity<List<Project>> getProjectsByTeam(@PathVariable Long teamId) {
         return ResponseEntity.ok(projectService.getProjectsByTeam(teamId));
     }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Project>> getProjectsByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(projectService.getProjectsByUserId(userId));
+    }
     
     @GetMapping("/search")
     public ResponseEntity<List<Project>> searchProjects(@RequestParam String name) {

@@ -46,6 +46,8 @@ public class AppUserController {
             .orElse(ResponseEntity.notFound().build());
     }
     
+
+    
     @GetMapping
     public ResponseEntity<List<AppUser>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
@@ -90,6 +92,16 @@ public class AppUserController {
         try {
             userService.updateLastLogin(id);
             return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    @PatchMapping("/{id}/role")
+    public ResponseEntity<AppUser> updateUserRole(@PathVariable Long id, @RequestParam String role) {
+        try {
+            AppUser updated = userService.changeUserRole(id, role);
+            return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

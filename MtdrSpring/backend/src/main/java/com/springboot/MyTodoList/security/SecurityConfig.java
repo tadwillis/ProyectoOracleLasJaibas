@@ -50,8 +50,14 @@ public class SecurityConfig {
                 // 2️⃣ Rutas de autenticación (login/register)
                 .requestMatchers("/api/auth/**").permitAll()
 
-                // 3️⃣ Rutas API protegidas (todas bajo /api/)
-                .requestMatchers("/api/**").hasRole("USER")
+                // 3️⃣ Rutas API protegidas para managers (ManagerController)
+                .requestMatchers("/api/manager/**").hasAnyRole("ADMIN", "MANAGER")
+
+                // 4️⃣ Rutas API protegidas para administración de usuarios (AppUserController)
+                .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "MANAGER")
+
+                // 5️⃣ Rutas API protegidas (resto de /api/)
+                .requestMatchers("/api/**").hasAnyRole("USER", "ADMIN", "MANAGER")
 
                 // 4️⃣ Rutas del frontend React (SPA)
                 .anyRequest().permitAll()

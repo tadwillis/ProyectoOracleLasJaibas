@@ -61,6 +61,11 @@ public class SprintController {
     public ResponseEntity<List<Sprint>> getActiveSprintsByTeam(@PathVariable Long teamId) {
         return ResponseEntity.ok(sprintService.getActiveSprintsByTeam(teamId));
     }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Sprint>> getSprintsByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(sprintService.getSprintsByUserId(userId));
+    }
     
     @PutMapping("/{id}")
     public ResponseEntity<Sprint> updateSprint(@PathVariable Long id, @RequestBody Sprint sprint) {
