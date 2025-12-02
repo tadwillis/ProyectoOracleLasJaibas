@@ -11,7 +11,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from "@mui/icons-material/Search";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import TopBar from "./TopBar";
+import TopBar from "../shared/TopBar";
 import { motion, useReducedMotion } from "framer-motion";
 
 // ----------------- Tiempos  -----------------

@@ -15,7 +15,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import InfoIcon from '@mui/icons-material/Info';
-import TopBar from './TopBar';
+import TopBar from '../shared/TopBar';
 import { motion, useReducedMotion } from 'framer-motion';
 
 // ----------------- Tiempos  -----------------

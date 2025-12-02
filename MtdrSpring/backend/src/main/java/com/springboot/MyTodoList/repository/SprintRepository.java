@@ -20,4 +20,7 @@ public interface SprintRepository extends JpaRepository<Sprint, Long> {
     
     @Query("SELECT s FROM Sprint s WHERE s.project.id = :projectId ORDER BY s.startDate DESC")
     List<Sprint> findByProjectIdOrderByStartDate(@Param("projectId") Long projectId);
+
+    @Query("SELECT s FROM Sprint s JOIN s.project p JOIN p.team t JOIN t.members m WHERE m.user.id = :userId")
+    List<Sprint> findByUserId(@Param("userId") Long userId);
 }
