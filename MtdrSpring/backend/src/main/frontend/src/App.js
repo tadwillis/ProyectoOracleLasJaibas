@@ -22,6 +22,7 @@ import ManagerSprints from "./components/manager/ManagerSprints";
 import ManagerTeams from "./components/manager/ManagerTeams";
 import ManagerTasks from "./components/manager/ManagerTasks";
 import Inicio from "./components/user/Inicio";
+import BacklogAnalysis from "./components/BacklogAnalysis";
 
 function App() {
   return (

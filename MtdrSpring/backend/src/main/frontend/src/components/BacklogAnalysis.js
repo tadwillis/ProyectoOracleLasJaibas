@@ -2,9 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   Button, Paper, LinearProgress, Typography, Box, Grid, Stack,
-  Card, CardContent, CardActions, Chip
+  Card, CardContent, CardActions, Chip, Divider, List, ListItem, ListItemIcon, ListItemText
 } from '@mui/material';
-import TopBar from '../components/TopBar';
+import {
+  CheckCircleOutline as CheckIcon,
+  RadioButtonUnchecked as BulletIcon,
+  TipsAndUpdates as TipIcon
+} from '@mui/icons-material';
+import TopBar from './shared/TopBar';
 import { motion, useReducedMotion } from 'framer-motion';
 
 const BANNER_SRC = "/img/banner-top.png";
@@ -29,6 +34,56 @@ const PRIORITY_COLOR = (n) => {
   if (v === 1) return 'warning';
   return 'success';
 };
+
+// Format AI analysis text into structured components
+function formatAnalysisText(text) {
+  if (!text) return null;
+
+  const lines = text.split('\n').filter(line => line.trim());
+  const elements = [];
+  let currentList = [];
+  let key = 0;
+
+  const flushList = () => {
+    if (currentList.length > 0) {
+      elements.push({ type: 'list', items: [...currentList], key: key++ });
+      currentList = [];
+    }
+  };
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+
+    // Headers (lines ending with :)
+    if (trimmed.match(/^[A-ZÁ-Ú].*:$/)) {
+      flushList();
+      elements.push({ type: 'header', text: trimmed.replace(':', ''), key: key++ });
+    }
+    // Numbered list items (1., 2., etc.)
+    else if (trimmed.match(/^\d+[\.)]\s+/)) {
+      const text = trimmed.replace(/^\d+[\.)]\s+/, '');
+      currentList.push({ text, numbered: true });
+    }
+    // Bullet points (-, *, •)
+    else if (trimmed.match(/^[-*•]\s+/)) {
+      const text = trimmed.replace(/^[-*•]\s+/, '');
+      currentList.push({ text, numbered: false });
+    }
+    // Bold text (**text**)
+    else if (trimmed.includes('**')) {
+      flushList();
+      elements.push({ type: 'bold', text: trimmed.replace(/\*\*/g, ''), key: key++ });
+    }
+    // Regular paragraph
+    else {
+      flushList();
+      elements.push({ type: 'paragraph', text: trimmed, key: key++ });
+    }
+  });
+
+  flushList();
+  return elements;
+}
 
 function BacklogAnalysis() {
   const [isLoading, setIsLoading] = useState(false);
@@ -271,17 +326,112 @@ function BacklogAnalysis() {
                 )}
 
                 {!isAnalyzing && analysis && (
-                  <Paper elevation={0} sx={{ p: 3, bgcolor: '#fcfcfc', borderRadius: 2 }}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        whiteSpace: 'pre-line',
-                        lineHeight: 1.8,
-                        color: '#333'
-                      }}
-                    >
-                      {analysis}
-                    </Typography>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 3,
+                      bgcolor: '#fafafa',
+                      borderRadius: 2,
+                      border: '1px solid #e0e0e0'
+                    }}
+                  >
+                    {formatAnalysisText(analysis)?.map((element) => {
+                      switch (element.type) {
+                        case 'header':
+                          return (
+                            <Box key={element.key} sx={{ mb: 2, mt: 3 }}>
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <TipIcon sx={{ color: '#f84600', fontSize: 24 }} />
+                                <Typography
+                                  variant="h6"
+                                  sx={{
+                                    fontWeight: 700,
+                                    color: '#f84600',
+                                    letterSpacing: '0.02em'
+                                  }}
+                                >
+                                  {element.text}
+                                </Typography>
+                              </Stack>
+                              <Divider sx={{ mt: 1, borderColor: '#f84600', borderWidth: 1 }} />
+                            </Box>
+                          );
+
+                        case 'list':
+                          return (
+                            <List key={element.key} sx={{ py: 0, mb: 2 }}>
+                              {element.items.map((item, idx) => (
+                                <ListItem
+                                  key={idx}
+                                  sx={{
+                                    py: 1,
+                                    px: 2,
+                                    alignItems: 'flex-start',
+                                    bgcolor: idx % 2 === 0 ? '#fafafa' : 'transparent',
+                                    borderRadius: 1,
+                                    '&:hover': {
+                                      bgcolor: '#f5f5f5'
+                                    }
+                                  }}
+                                >
+                                  <ListItemIcon sx={{ minWidth: 36, mt: 0.5 }}>
+                                    {item.numbered ? (
+                                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                                    ) : (
+                                      <BulletIcon sx={{ color: '#757575', fontSize: 18 }} />
+                                    )}
+                                  </ListItemIcon>
+                                  <ListItemText
+                                    primary={item.text}
+                                    primaryTypographyProps={{
+                                      variant: 'body2',
+                                      sx: {
+                                        lineHeight: 1.7,
+                                        color: '#333'
+                                      }
+                                    }}
+                                  />
+                                </ListItem>
+                              ))}
+                            </List>
+                          );
+
+                        case 'bold':
+                          return (
+                            <Typography
+                              key={element.key}
+                              variant="body1"
+                              sx={{
+                                fontWeight: 700,
+                                mb: 2,
+                                color: '#212121',
+                                lineHeight: 1.7
+                              }}
+                            >
+                              {element.text}
+                            </Typography>
+                          );
+
+                        case 'paragraph':
+                          return (
+                            <Typography
+                              key={element.key}
+                              variant="body2"
+                              sx={{
+                                mb: 2,
+                                color: '#555',
+                                lineHeight: 1.8,
+                                textAlign: 'justify'
+                              }}
+                            >
+                              {element.text}
+                            </Typography>
+                          );
+
+                        default:
+                          return null;
+                      }
+                    })}
                   </Paper>
                 )}
               </Paper>
