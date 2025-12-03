@@ -393,7 +393,7 @@ function BacklogAnalysis() {
                     </Grid>
 
                     {/* Recommendations Section */}
-                    <Box>
+                    <Box sx={{ mt: 2 }}>
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
                         <IdeaIcon sx={{ color: '#f84600' }} />
                         <Typography variant="h6" sx={{ fontWeight: 700, color: '#333' }}>
