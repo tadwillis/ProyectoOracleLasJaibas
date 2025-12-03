@@ -286,7 +286,7 @@ function BacklogAnalysis() {
                 )}
 
                 {!isAnalyzing && analysisData && (
-                  <Stack spacing={3}>
+                  <Stack spacing={4}>
                     {/* Top Stats Row */}
                     <Grid container spacing={2}>
                       {/* Quality Score */}
@@ -392,8 +392,10 @@ function BacklogAnalysis() {
                       </Grid>
                     </Grid>
 
+                    <Divider sx={{ my: 4 }} />
+
                     {/* Recommendations Section */}
-                    <Box sx={{ mt: 2 }}>
+                    <Box>
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
                         <IdeaIcon sx={{ color: '#f84600' }} />
                         <Typography variant="h6" sx={{ fontWeight: 700, color: '#333' }}>
