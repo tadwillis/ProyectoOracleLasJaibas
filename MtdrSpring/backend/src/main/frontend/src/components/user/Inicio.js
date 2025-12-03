@@ -157,6 +157,10 @@ const Inicio = () => {
         }}
       >
         <Button
+          component="a"
+          href="https://t.me/a00829341_java_bot"
+          target="_blank"
+          rel="noopener noreferrer"
           variant="contained"
           sx={{
             bgcolor: '#e6e6e6',
