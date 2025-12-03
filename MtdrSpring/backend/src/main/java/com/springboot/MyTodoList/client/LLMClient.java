@@ -24,7 +24,11 @@ public class LLMClient {
         } catch (Exception e) {
             // Return error message if Python service fails
             TaskAnalysisResponse errorResponse = new TaskAnalysisResponse();
-            errorResponse.setAnalysis("Error al analizar la tarea: " + e.getMessage());
+            // Create a dummy analysis object with error info
+            AnalysisData errorData = new AnalysisData();
+            errorData.setComplexity("Error");
+            errorData.setRecommendations(java.util.Collections.singletonList("Error al analizar la tarea: " + e.getMessage()));
+            errorResponse.setAnalysis(errorData);
             return errorResponse;
         }
     }
@@ -40,6 +44,19 @@ public class LLMClient {
 
     @Data
     public static class TaskAnalysisResponse {
-        private String analysis;
+        private AnalysisData analysis;
+    }
+
+    @Data
+    public static class AnalysisData {
+        @JsonProperty("story_points")
+        private Integer storyPoints;
+        
+        @JsonProperty("quality_score")
+        private Integer qualityScore;
+        
+        private String complexity;
+        
+        private java.util.List<String> recommendations;
     }
 }

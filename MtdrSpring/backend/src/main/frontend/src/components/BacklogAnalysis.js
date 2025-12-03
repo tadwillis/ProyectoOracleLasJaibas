@@ -2,12 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   Button, Paper, LinearProgress, Typography, Box, Grid, Stack,
-  Card, CardContent, CardActions, Chip, Divider, List, ListItem, ListItemIcon, ListItemText
+  Card, CardContent, CardActions, Chip, Divider, List, ListItem, ListItemIcon, ListItemText,
+  CircularProgress
 } from '@mui/material';
 import {
   CheckCircleOutline as CheckIcon,
-  RadioButtonUnchecked as BulletIcon,
-  TipsAndUpdates as TipIcon
+  Lightbulb as IdeaIcon,
+  Speed as SpeedIcon,
+  Assignment as TaskIcon,
+  Psychology as BrainIcon
 } from '@mui/icons-material';
 import TopBar from './shared/TopBar';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -35,62 +38,12 @@ const PRIORITY_COLOR = (n) => {
   return 'success';
 };
 
-// Format AI analysis text into structured components
-function formatAnalysisText(text) {
-  if (!text) return null;
-
-  const lines = text.split('\n').filter(line => line.trim());
-  const elements = [];
-  let currentList = [];
-  let key = 0;
-
-  const flushList = () => {
-    if (currentList.length > 0) {
-      elements.push({ type: 'list', items: [...currentList], key: key++ });
-      currentList = [];
-    }
-  };
-
-  lines.forEach((line) => {
-    const trimmed = line.trim();
-
-    // Headers (lines ending with :)
-    if (trimmed.match(/^[A-ZÁ-Ú].*:$/)) {
-      flushList();
-      elements.push({ type: 'header', text: trimmed.replace(':', ''), key: key++ });
-    }
-    // Numbered list items (1., 2., etc.)
-    else if (trimmed.match(/^\d+[\.)]\s+/)) {
-      const text = trimmed.replace(/^\d+[\.)]\s+/, '');
-      currentList.push({ text, numbered: true });
-    }
-    // Bullet points (-, *, •)
-    else if (trimmed.match(/^[-*•]\s+/)) {
-      const text = trimmed.replace(/^[-*•]\s+/, '');
-      currentList.push({ text, numbered: false });
-    }
-    // Bold text (**text**)
-    else if (trimmed.includes('**')) {
-      flushList();
-      elements.push({ type: 'bold', text: trimmed.replace(/\*\*/g, ''), key: key++ });
-    }
-    // Regular paragraph
-    else {
-      flushList();
-      elements.push({ type: 'paragraph', text: trimmed, key: key++ });
-    }
-  });
-
-  flushList();
-  return elements;
-}
-
 function BacklogAnalysis() {
   const [isLoading, setIsLoading] = useState(false);
   const [todoTasks, setTodoTasks] = useState([]);
   const [error, setError] = useState();
   const [selectedTaskId, setSelectedTaskId] = useState(null);
-  const [analysis, setAnalysis] = useState('');
+  const [analysisData, setAnalysisData] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const prefersReducedMotion = useReducedMotion();
@@ -132,7 +85,7 @@ function BacklogAnalysis() {
   async function analyzeTask(taskId) {
     setSelectedTaskId(taskId);
     setIsAnalyzing(true);
-    setAnalysis('🤖 Analizando tarea con IA...');
+    setAnalysisData(null);
 
     try {
       const token = localStorage.getItem("token");
@@ -148,10 +101,15 @@ function BacklogAnalysis() {
       }
 
       const data = await res.json();
-      setAnalysis(data.analysis);
+      // data.analysis should now be the structured object
+      setAnalysisData(data.analysis);
     } catch (e) {
       console.error('Error analyzing task:', e);
-      setAnalysis('❌ Error al analizar la tarea. Por favor intenta de nuevo.');
+      // Fallback error state
+      setAnalysisData({
+        complexity: "Error",
+        recommendations: ["No se pudo analizar la tarea. Intenta de nuevo."]
+      });
     } finally {
       setIsAnalyzing(false);
     }
@@ -160,6 +118,14 @@ function BacklogAnalysis() {
   const underlineProps = prefersReducedMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1, transition: { duration: 0.25 } } }
     : { initial: { scaleX: 0 }, animate: { scaleX: 1, transition: { duration: 0.55 } }, style: { originX: 0 } };
+
+  // Helper to determine color based on quality score
+  const getScoreColor = (score) => {
+    if (!score) return '#e0e0e0';
+    if (score >= 80) return '#4caf50';
+    if (score >= 50) return '#ff9800';
+    return '#f44336';
+  };
 
   return (
     <>
@@ -286,11 +252,11 @@ function BacklogAnalysis() {
             {/* Right: Analysis Result */}
             <Grid item xs={12} md={7}>
               <Paper sx={{ p: 3, borderRadius: 2, minHeight: 400 }}>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>
+                <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
                   Análisis de IA
                 </Typography>
 
-                {!selectedTaskId && !analysis && (
+                {!selectedTaskId && !analysisData && (
                   <Box
                     sx={{
                       display: 'flex',
@@ -311,128 +277,169 @@ function BacklogAnalysis() {
                 )}
 
                 {isAnalyzing && (
-                  <>
-                    <LinearProgress
-                      sx={{
-                        mb: 2,
-                        bgcolor: '#f5f5f5',
-                        '& .MuiLinearProgress-bar': { bgcolor: '#f84600' }
-                      }}
-                    />
-                    <Typography variant="body2" sx={{ textAlign: 'center', color: '#666' }}>
+                  <Box sx={{ textAlign: 'center', py: 8 }}>
+                    <CircularProgress sx={{ color: '#f84600', mb: 2 }} />
+                    <Typography variant="body2" sx={{ color: '#666' }}>
                       Analizando tarea con Gemini AI...
                     </Typography>
-                  </>
+                  </Box>
                 )}
 
-                {!isAnalyzing && analysis && (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 3,
-                      bgcolor: '#fafafa',
-                      borderRadius: 2,
-                      border: '1px solid #e0e0e0'
-                    }}
-                  >
-                    {formatAnalysisText(analysis)?.map((element) => {
-                      switch (element.type) {
-                        case 'header':
-                          return (
-                            <Box key={element.key} sx={{ mb: 2, mt: 3 }}>
-                              <Stack direction="row" spacing={1} alignItems="center">
-                                <TipIcon sx={{ color: '#f84600', fontSize: 24 }} />
-                                <Typography
-                                  variant="h6"
-                                  sx={{
-                                    fontWeight: 700,
-                                    color: '#f84600',
-                                    letterSpacing: '0.02em'
-                                  }}
-                                >
-                                  {element.text}
-                                </Typography>
-                              </Stack>
-                              <Divider sx={{ mt: 1, borderColor: '#f84600', borderWidth: 1 }} />
+                {!isAnalyzing && analysisData && (
+                  <Stack spacing={3}>
+                    {/* Top Stats Row */}
+                    <Grid container spacing={2}>
+                      {/* Quality Score */}
+                      <Grid item xs={12} sm={4}>
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 2,
+                            bgcolor: '#fafafa',
+                            border: '1px solid #e0e0e0',
+                            borderRadius: 2,
+                            textAlign: 'center',
+                            height: '100%'
+                          }}
+                        >
+                          <Typography variant="caption" sx={{ color: '#666', display: 'block', mb: 1 }}>
+                            CALIDAD
+                          </Typography>
+                          <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                            <CircularProgress
+                              variant="determinate"
+                              value={analysisData.quality_score || 0}
+                              size={60}
+                              thickness={4}
+                              sx={{ color: getScoreColor(analysisData.quality_score) }}
+                            />
+                            <Box
+                              sx={{
+                                top: 0,
+                                left: 0,
+                                bottom: 0,
+                                right: 0,
+                                position: 'absolute',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <Typography variant="caption" component="div" color="text.secondary" sx={{ fontWeight: 'bold' }}>
+                                {analysisData.quality_score || 0}%
+                              </Typography>
                             </Box>
-                          );
+                          </Box>
+                        </Paper>
+                      </Grid>
 
-                        case 'list':
-                          return (
-                            <List key={element.key} sx={{ py: 0, mb: 2 }}>
-                              {element.items.map((item, idx) => (
-                                <ListItem
-                                  key={idx}
-                                  sx={{
-                                    py: 1,
-                                    px: 2,
-                                    alignItems: 'flex-start',
-                                    bgcolor: idx % 2 === 0 ? '#fafafa' : 'transparent',
-                                    borderRadius: 1,
-                                    '&:hover': {
-                                      bgcolor: '#f5f5f5'
-                                    }
-                                  }}
-                                >
-                                  <ListItemIcon sx={{ minWidth: 36, mt: 0.5 }}>
-                                    {item.numbered ? (
-                                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
-                                    ) : (
-                                      <BulletIcon sx={{ color: '#757575', fontSize: 18 }} />
-                                    )}
+                      {/* Story Points */}
+                      <Grid item xs={6} sm={4}>
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 2,
+                            bgcolor: '#fafafa',
+                            border: '1px solid #e0e0e0',
+                            borderRadius: 2,
+                            textAlign: 'center',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Typography variant="caption" sx={{ color: '#666', display: 'block', mb: 1 }}>
+                            STORY POINTS
+                          </Typography>
+                          <Stack direction="row" alignItems="center" spacing={1}>
+                            <SpeedIcon sx={{ color: '#2196f3' }} />
+                            <Typography variant="h4" sx={{ fontWeight: 700, color: '#2196f3' }}>
+                              {analysisData.story_points || '-'}
+                            </Typography>
+                          </Stack>
+                        </Paper>
+                      </Grid>
+
+                      {/* Complexity */}
+                      <Grid item xs={6} sm={4}>
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 2,
+                            bgcolor: '#fafafa',
+                            border: '1px solid #e0e0e0',
+                            borderRadius: 2,
+                            textAlign: 'center',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Typography variant="caption" sx={{ color: '#666', display: 'block', mb: 1 }}>
+                            COMPLEJIDAD
+                          </Typography>
+                          <Chip
+                            label={analysisData.complexity || 'Desconocida'}
+                            color={analysisData.complexity === 'simple' ? 'success' : analysisData.complexity === 'complex' ? 'error' : 'default'}
+                            variant="outlined"
+                            sx={{ fontWeight: 600, textTransform: 'capitalize' }}
+                          />
+                        </Paper>
+                      </Grid>
+                    </Grid>
+
+                    {/* Recommendations Section */}
+                    <Box>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                        <IdeaIcon sx={{ color: '#f84600' }} />
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#333' }}>
+                          Recomendaciones
+                        </Typography>
+                      </Stack>
+                      
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          bgcolor: '#fff',
+                          border: '1px solid #e0e0e0',
+                          borderRadius: 2,
+                          overflow: 'hidden'
+                        }}
+                      >
+                        <List sx={{ py: 0 }}>
+                          {analysisData.recommendations && analysisData.recommendations.length > 0 ? (
+                            analysisData.recommendations.map((rec, idx) => (
+                              <React.Fragment key={idx}>
+                                {idx > 0 && <Divider />}
+                                <ListItem sx={{ py: 2, px: 3, alignItems: 'flex-start' }}>
+                                  <ListItemIcon sx={{ minWidth: 40, mt: 0.5 }}>
+                                    <CheckIcon sx={{ color: '#4caf50' }} />
                                   </ListItemIcon>
                                   <ListItemText
-                                    primary={item.text}
+                                    primary={rec}
                                     primaryTypographyProps={{
                                       variant: 'body2',
-                                      sx: {
-                                        lineHeight: 1.7,
-                                        color: '#333'
-                                      }
+                                      sx: { lineHeight: 1.6, color: '#444' }
                                     }}
                                   />
                                 </ListItem>
-                              ))}
-                            </List>
-                          );
-
-                        case 'bold':
-                          return (
-                            <Typography
-                              key={element.key}
-                              variant="body1"
-                              sx={{
-                                fontWeight: 700,
-                                mb: 2,
-                                color: '#212121',
-                                lineHeight: 1.7
-                              }}
-                            >
-                              {element.text}
-                            </Typography>
-                          );
-
-                        case 'paragraph':
-                          return (
-                            <Typography
-                              key={element.key}
-                              variant="body2"
-                              sx={{
-                                mb: 2,
-                                color: '#555',
-                                lineHeight: 1.8,
-                                textAlign: 'justify'
-                              }}
-                            >
-                              {element.text}
-                            </Typography>
-                          );
-
-                        default:
-                          return null;
-                      }
-                    })}
-                  </Paper>
+                              </React.Fragment>
+                            ))
+                          ) : (
+                            <ListItem sx={{ py: 3, justifyContent: 'center' }}>
+                              <Typography variant="body2" sx={{ color: '#999', fontStyle: 'italic' }}>
+                                No hay recomendaciones específicas para esta tarea.
+                              </Typography>
+                            </ListItem>
+                          )}
+                        </List>
+                      </Paper>
+                    </Box>
+                  </Stack>
                 )}
               </Paper>
             </Grid>
