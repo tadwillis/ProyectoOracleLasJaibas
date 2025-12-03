@@ -3,6 +3,8 @@ package com.springboot.MyTodoList.service;
 import com.springboot.MyTodoList.model.*;
 import com.springboot.MyTodoList.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,11 +15,13 @@ import java.util.*;
 @Transactional
 public class TaskService {
 
+    private static final Logger logger = LoggerFactory.getLogger(TaskService.class);
+
     private final TaskRepository taskRepository;
     private final UserStoryRepository storyRepository;
     private final TeamRepository teamRepository;
     private final AppUserRepository userRepository;
-    private final SprintRepository sprintRepository; // 👈 agregado
+    private final SprintRepository sprintRepository;
 
     public Task createTask(Task task, Long storyId, Long teamId) {
         UserStory story = storyRepository.findById(storyId)
@@ -61,7 +65,18 @@ public class TaskService {
     }
 
     public List<Task> getTasksByAssignedUser(Long userId) {
-        return taskRepository.findByAssignedToId(userId);
+        logger.info("🔍 TaskService - Buscando tareas para userId: {}", userId);
+        List<Task> tasks = taskRepository.findByAssignedToId(userId);
+        logger.info("🔍 TaskService - Resultado: {} tareas encontradas", tasks.size());
+
+        if (!tasks.isEmpty()) {
+            logger.info("🔍 TaskService - Primera tarea: ID={}, Título={}, AssignedTo={}",
+                    tasks.get(0).getId(),
+                    tasks.get(0).getTitle(),
+                    tasks.get(0).getAssignedTo() != null ? tasks.get(0).getAssignedTo().getId() : "NULL");
+        }
+
+        return tasks;
     }
 
     public List<Task> getTasksByUserAndStatus(Long userId, String status) {

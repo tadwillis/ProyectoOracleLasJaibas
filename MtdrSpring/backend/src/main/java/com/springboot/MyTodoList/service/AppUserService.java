@@ -314,4 +314,9 @@ public class AppUserService {
         public int getInactive() { return inactive; }
         public void setInactive(int inactive) { this.inactive = inactive; }
     }
+    
+    // Método adicional para validar password
+    public boolean validatePassword(String rawPassword, String encodedPassword) {
+        return passwordEncoder.matches(rawPassword, encodedPassword);
+    }
 }
