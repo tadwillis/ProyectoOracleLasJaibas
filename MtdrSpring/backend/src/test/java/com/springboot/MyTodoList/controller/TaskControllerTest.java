@@ -1,5 +1,6 @@
 package com.springboot.MyTodoList.controller;
 
+import com.springboot.MyTodoList.client.LLMClient;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -21,14 +22,13 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.MyTodoList.model.AppUser;
@@ -36,27 +36,34 @@ import com.springboot.MyTodoList.model.Task;
 import com.springboot.MyTodoList.repository.TaskRepository;
 import com.springboot.MyTodoList.service.TaskService;
 
-@WebMvcTest(controllers = TaskController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com.springboot.MyTodoList.security.*|com.springboot.MyTodoList.filter.*"))
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class TaskControllerTest {
 
-        @Autowired
         private MockMvc mockMvc;
 
-        @Autowired
         private ObjectMapper objectMapper;
 
-        @MockBean
+        @Mock
         private TaskService taskService;
 
-        @MockBean
+        @Mock
         private TaskRepository taskRepository;
+
+        @Mock
+        private LLMClient llmClient;
+
+        @InjectMocks
+        private TaskController taskController;
 
         private Task testTask;
         private AppUser testUser;
 
         @BeforeEach
         void setUp() {
+                // Initialize MockMvc
+                mockMvc = MockMvcBuilders.standaloneSetup(taskController).build();
+                objectMapper = new ObjectMapper();
+
                 // Setup test user
                 testUser = new AppUser();
                 testUser.setId(1L);

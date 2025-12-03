@@ -20,9 +20,9 @@ const links = [
   { to: '/teams',      label: 'Equipos' },
   { to: '/projects',   label: 'Proyectos' },
   { to: '/taskList',   label: 'Tareas' },
+  { to: '/backlog-analysis', label: 'Análisis IA' },  
   { to: '/ranking',    label: 'Ranking' },
 ];
-
 export default function TopBar() {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState(null);
