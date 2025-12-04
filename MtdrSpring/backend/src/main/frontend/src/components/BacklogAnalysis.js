@@ -8,9 +8,7 @@ import {
 import {
   CheckCircleOutline as CheckIcon,
   Lightbulb as IdeaIcon,
-  Speed as SpeedIcon,
-  Assignment as TaskIcon,
-  Psychology as BrainIcon
+  Speed as SpeedIcon
 } from '@mui/icons-material';
 import TopBar from './shared/TopBar';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -70,7 +68,7 @@ function BacklogAnalysis() {
 
       const data = await res.json();
       // Filter only TODO tasks
-      const todos = data.filter(task => 
+      const todos = data.filter(task =>
         task.status && task.status.toLowerCase() === 'todo'
       );
       setTodoTasks(todos);
@@ -402,7 +400,7 @@ function BacklogAnalysis() {
                           Recomendaciones
                         </Typography>
                       </Stack>
-                      
+
                       <Paper
                         elevation={0}
                         sx={{

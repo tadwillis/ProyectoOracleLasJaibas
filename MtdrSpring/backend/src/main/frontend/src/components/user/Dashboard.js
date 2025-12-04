@@ -2,11 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Paper, Typography, Box, Grid, Divider, Avatar, Chip,
-  IconButton, TextField, Tooltip
+  TextField
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
 import TopBar from '../shared/TopBar';
 import { motion, useReducedMotion } from 'framer-motion';
 
@@ -27,7 +24,7 @@ const MOTION = {
 const fadeInUp = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0, transition: { duration: MOTION.enter, ease: [0.16, 1, 0.3, 1] } },
-  exit:    { opacity: 0, y: 8,  transition: { duration: MOTION.exit } }
+  exit: { opacity: 0, y: 8, transition: { duration: MOTION.exit } }
 };
 const staggerContainer = {
   animate: { transition: { staggerChildren: MOTION.stagger, delayChildren: MOTION.delayChildren } }
@@ -35,7 +32,7 @@ const staggerContainer = {
 const reduced = {
   initial: { opacity: 0 },
   animate: { opacity: 1, transition: { duration: MOTION.reduced } },
-  exit:    { opacity: 0, transition: { duration: MOTION.reduced } }
+  exit: { opacity: 0, transition: { duration: MOTION.reduced } }
 };
 
 const BANNER_SRC = "/img/banner-top3.png";
@@ -69,17 +66,17 @@ function Dashboard() {
   const [user, setUser] = useState();
   const username = localStorage.getItem('username') || 'Usuario';
 
-//grafica kpi desempeño en horas
+  //grafica kpi desempeño en horas
   const estimatedHours = Number(kpiHours?.totalEstimatedHours ?? 0);
   const realHours = Number(kpiHours?.totalEffortHours ?? 0);
   const hoursEfficiency = Number(kpiHours?.efficiency ?? 0);
 
-  const maxHours = Math.max(estimatedHours, realHours, 1); 
+  const maxHours = Math.max(estimatedHours, realHours, 1);
 
-  const HOURS_MAX_BAR_HEIGHT = 90; 
+  const HOURS_MAX_BAR_HEIGHT = 90;
   const estimatedBarHeight = (estimatedHours / maxHours) * HOURS_MAX_BAR_HEIGHT;
   const realBarHeight = (realHours / maxHours) * HOURS_MAX_BAR_HEIGHT;
-//--------------------------------------------------------------------
+  //--------------------------------------------------------------------
   const userSprintChartWidth = Math.max(260, 80 + sprintHoursList.length * 60);
   const maxUserSprintHours = sprintHoursList.reduce((max, s) => {
     const h = Number(s.totalHours ?? 0);
@@ -89,36 +86,36 @@ function Dashboard() {
 
   // --- Máximo de horas globales por sprint (para escalar las barras) ---
   const maxGlobalSprintHours = sprintGlobalHours.reduce((max, s) => {
-  const h = Number(s.totalHours ?? 0);
-  return h > max ? h : max;
+    const h = Number(s.totalHours ?? 0);
+    return h > max ? h : max;
   }, 0);
 
   // --- Máximo de horas del equipo por sprint (para escalar las barras) ---
   const maxTeamSprintHours = teamSprintHoursMatrix
     ? teamSprintHoursMatrix.rows.reduce((max, row) => {
-        return row.hours.reduce((m2, h) => {
-          const val = Number(h ?? 0);
-          return val > m2 ? val : m2;
-        }, max);
-      }, 0)
+      return row.hours.reduce((m2, h) => {
+        const val = Number(h ?? 0);
+        return val > m2 ? val : m2;
+      }, max);
+    }, 0)
     : 0;
 
   const teamSprintChartWidth = teamSprintHoursMatrix
     ? Math.max(
-        260,
-        80 +
-          teamSprintHoursMatrix.sprints.length *
-            (40 + teamSprintHoursMatrix.rows.length * 18)
-      )
+      260,
+      80 +
+      teamSprintHoursMatrix.sprints.length *
+      (40 + teamSprintHoursMatrix.rows.length * 18)
+    )
     : 260;
 
   const TEAM_BASE_COLORS = [
-    '#4caf50', 
-    '#2196f3', 
-    '#ff9800', 
-    '#ab47bc', 
-    '#f44336', 
-    '#00897b', 
+    '#4caf50',
+    '#2196f3',
+    '#ff9800',
+    '#ab47bc',
+    '#f44336',
+    '#00897b',
   ];
   const getMemberColor = (index, totalMembers) => {
     if (index < TEAM_BASE_COLORS.length) {
@@ -132,15 +129,15 @@ function Dashboard() {
 
   const globalSprintChartWidth = Math.max(260, 80 + sprintGlobalHours.length * 60);
 
-// grafica kpi desempeño en tareas
+  // grafica kpi desempeño en tareas
   const plannedTasks = Number(kpiTasks?.totalPlannedTasks ?? 0);
   const doneTasks = Number(kpiTasks?.totalDoneTasks ?? 0);
   const tasksEfficiency = Number(kpiTasks?.efficiency ?? 0);
 
-  const pendingTasks = Math.max(plannedTasks - doneTasks, 0);
+  // Removed pendingTasks as it's not used
 
   const donePercentOfPlan =
-  plannedTasks > 0 ? Math.min((doneTasks / plannedTasks) * 100, 100) : 0;
+    plannedTasks > 0 ? Math.min((doneTasks / plannedTasks) * 100, 100) : 0;
 
   const DONUT_RADIUS = 36;
   const DONUT_CIRC = 2 * Math.PI * DONUT_RADIUS;
@@ -177,13 +174,7 @@ function Dashboard() {
     setTeams(await res.json());
   }
 
-  async function loadProjectsByTeam(teamId) {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`/api/projects/team/${teamId}`, {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-    setProjects(await res.json());
-  }
+
 
   async function loadTeamSprintMatrix(projectId, teamId) {
     const token = localStorage.getItem("token");
@@ -192,7 +183,7 @@ function Dashboard() {
     });
 
     const data = await res.json();
-    setTeamSprintHours(data); 
+    setTeamSprintHours(data);
   }
 
   async function loadSprintsByProject(projectId) {
@@ -265,7 +256,8 @@ function Dashboard() {
     loadProjects();
     loadTeams();
     loadUser();
-  }, [loadKPIUserHours, loadKPIUserTasks, loadUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
 
   // === Preferencias de accesibilidad (reduce motion) ===
   const prefersReducedMotion = useReducedMotion();
@@ -273,7 +265,7 @@ function Dashboard() {
   const underlineProps = prefersReducedMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1, transition: { duration: MOTION.reduced } } }
     : { initial: { scaleX: 0 }, animate: { scaleX: 1, transition: { duration: MOTION.underline } }, style: { originX: 0 } };
-    
+
 
   // ------------ UI -----------------
   return (
@@ -443,7 +435,7 @@ function Dashboard() {
                           Comparativa de horas estimadas vs reales
                         </Typography>
 
-                        { kpiHours ? (
+                        {kpiHours ? (
                           <Box sx={{ mt: 2 }}>
                             <Grid container spacing={2} alignItems="center">
                               {/* Resumen textual a la izquierda */}
@@ -771,7 +763,7 @@ function Dashboard() {
                                       y={y}
                                       width={barWidth}
                                       height={barHeight}
-                                      fill="#f84600" 
+                                      fill="#f84600"
                                       rx="4"
                                     />
 
@@ -809,7 +801,7 @@ function Dashboard() {
                   {/* KPI Horas por miembro del equipo por sprint */}
                   <Grid item xs={12}>
                     <Paper sx={{ p: 3, borderRadius: 3 }}>
-                      
+
                       <Typography variant="h6" sx={{ fontWeight: 700 }}>
                         Horas por Sprint por cada Miembro del Equipo
                       </Typography>
@@ -924,7 +916,7 @@ function Dashboard() {
                                             y={y}
                                             width={barWidth}
                                             height={barHeight}
-                                            fill={getMemberColor(userIdx, teamSprintHoursMatrix.rows.length)} 
+                                            fill={getMemberColor(userIdx, teamSprintHoursMatrix.rows.length)}
                                             rx="3"
                                           />
                                           {barHeight > 10 && (
@@ -987,11 +979,11 @@ function Dashboard() {
                       )}
                     </Paper>
                   </Grid>
-                  
+
                   {/* KPI Tareas por miembro del equipo por sprint */}
                   <Grid item xs={12}>
                     <Paper sx={{ p: 3, borderRadius: 3 }}>
-                      
+
                       <Typography variant="h6" sx={{ fontWeight: 700 }}>
                         Tareas por Sprint con Miembros del Equipo
                       </Typography>
