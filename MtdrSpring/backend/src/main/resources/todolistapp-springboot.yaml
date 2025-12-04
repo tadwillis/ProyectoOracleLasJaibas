@@ -72,6 +72,8 @@ spec:
                   name: frontendadmin
                   key: password
                   optional: true
+            - name: GEMINI_API_KEY
+              value: "%GEMINI_API_KEY%"
           volumeMounts:
             - name: creds
               mountPath: /mtdrworkshop/creds
