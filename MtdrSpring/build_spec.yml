@@ -125,40 +125,6 @@ steps:
       echo "📦 Usando JAR: $JAR"
       cp -f "$JAR" app.jar
 
-  # -------------------------------
-  # ☸️ Install kubectl
-  # -------------------------------
-  - type: Command
-    name: "Install kubectl"
-    command: |
-      curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-      chmod +x kubectl
-      mkdir -p ~/.local/bin
-      mv ./kubectl ~/.local/bin/kubectl
-      export PATH=$PATH:~/.local/bin
-
-  # -------------------------------
-  # 🔌 Setup Kubeconfig
-  # -------------------------------
-  - type: Command
-    name: "Setup Kubeconfig"
-    command: |
-      mkdir -p $HOME/.kube
-      # Requires OKE_CLUSTER_ID and OCI_REGION env vars
-      oci ce cluster create-kubeconfig --cluster-id ${OKE_CLUSTER_ID} --file $HOME/.kube/config --region ${OCI_REGION} --token-version 2.0.0 
-      export KUBECONFIG=$HOME/.kube/config
-
-  # -------------------------------
-  # 🚀 Run Deploy Script
-  # -------------------------------
-  - type: Command
-    name: "Run Deploy Script"
-    command: |
-      cd MtdrSpring/backend
-      chmod +x deploy.sh
-      # Requires DOCKER_REGISTRY, TODO_PDB_NAME, OCI_REGION, UI_USERNAME
-      ./deploy.sh
-
 # -------------------------------
 # 📦 Output Artifacts
 # -------------------------------
