@@ -73,7 +73,11 @@ spec:
                   key: password
                   optional: true
             - name: GEMINI_API_KEY
-              value: "%GEMINI_API_KEY%"
+              valueFrom:
+                secretKeyRef:
+                  name: gemini-api-secret
+                  key: api-key
+                  optional: false
           volumeMounts:
             - name: creds
               mountPath: /mtdrworkshop/creds

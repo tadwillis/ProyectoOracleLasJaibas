@@ -13,15 +13,14 @@ import { jwtDecode } from 'jwt-decode';
 const ORACLE_LOGO = '/img/Oracle-Symbol.png';
 
 const links = [
-  { to: '/Inicio',           label: 'Inicio' },
-  { to: '/dashboard',  label: 'Dashboard' },
-  { to: '/stories',    label: 'User Stories' },
-  { to: '/sprints',    label: 'Sprints' },
-  { to: '/teams',      label: 'Equipos' },
-  { to: '/projects',   label: 'Proyectos' },
-  { to: '/taskList',   label: 'Tareas' },
-  { to: '/backlog-analysis', label: 'Análisis IA' },  
-  { to: '/ranking',    label: 'Ranking' },
+  { to: '/Inicio', label: 'Inicio' },
+  { to: '/dashboard', label: 'Dashboard' },
+  { to: '/stories', label: 'User Stories' },
+  { to: '/sprints', label: 'Sprints' },
+  { to: '/teams', label: 'Equipos' },
+  { to: '/projects', label: 'Proyectos' },
+  { to: '/taskList', label: 'Tareas' },
+  { to: '/backlog-analysis', label: 'Análisis IA' },
 ];
 export default function TopBar() {
   const navigate = useNavigate();
@@ -94,7 +93,7 @@ export default function TopBar() {
             </Button>
           ))}
           {userRole === 'ADMIN' && (
-             <Button
+            <Button
               component={NavLink}
               to="/admin"
               sx={activeStyle}

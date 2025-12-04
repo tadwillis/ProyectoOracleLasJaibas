@@ -1,24 +1,34 @@
 #!/bin/bash
+set -euo pipefail
 
-export IMAGE_NAME=todolistapp-springboot
-export IMAGE_VERSION=0.1
+echo "🚀 Starting backend build (build.sh)"
 
-
-if [ -z "$DOCKER_REGISTRY" ]; then
-    export DOCKER_REGISTRY=$(state_get DOCKER_REGISTRY)
-    echo "DOCKER_REGISTRY set."
-fi
-if [ -z "$DOCKER_REGISTRY" ]; then
-    echo "Error: DOCKER_REGISTRY env variable needs to be set!"
-    exit 1
+# -------------------------------
+# ☕ JAVA_HOME (en OCI ya viene del YAML)
+# -------------------------------
+if [ -n "${JAVA_HOME:-}" ]; then
+  export PATH="$JAVA_HOME/bin:$PATH"
 fi
 
-export IMAGE=${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_VERSION}
+echo "Using Java version:"
+java -version || true
 
-mvn clean package spring-boot:repackage
-docker build -f Dockerfile -t $IMAGE .
-
-docker push $IMAGE
-if [  $? -eq 0 ]; then
-    docker rmi "$IMAGE" #local
+# -------------------------------
+# 📦 Variables de imagen desde el YAML
+# -------------------------------
+# DOCKER_REGISTRY ya viene con el repo e imagen:
+#   qro.ocir.io/axjozjviyuvz/reacttodo/asdvp
+# IMAGE_VERSION = 0.1
+if [ -z "${DOCKER_REGISTRY:-}" ]; then
+  echo "❌ DOCKER_REGISTRY env variable needs to be set!"
+  exit 1
 fi
+
+IMAGE_VERSION="${IMAGE_VERSION:-0.1}"
+IMAGE_TAG="${DOCKER_REGISTRY}:${IMAGE_VERSION}"
+
+echo "📦 Using image tag: ${IMAGE_TAG}"
+
+# -------------------------------
+# 🏗️ Build del JAR
+# ------------

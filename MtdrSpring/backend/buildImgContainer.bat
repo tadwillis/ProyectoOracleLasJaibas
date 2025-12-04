@@ -20,9 +20,9 @@ docker rmi agileimage:0.1 2>/dev/null || true
 # build de la app
 mvn clean verify
 
-# build de imagen (SIN forzar --platform) -> usa la del host (ARM en Mac, x86 en Win/Linux)
-# --pull y --no-cache para evitar que te “recuerde” bases viejas
-docker build -f DockerfileDev -t agileimage:0.1 . --pull --no-cache
+# Build for AMD64 (OCI/Cloud compatibility) - works on both Mac ARM and x86
+echo "Building Docker image for linux/amd64 platform (OCI compatible)..."
+docker buildx build --platform linux/amd64 -f DockerfileDev -t agileimage:0.1 . --pull --no-cache
 
 # run en 8080
 docker run --name agilecontainer -p 8080:8080 -d agileimage:0.1
