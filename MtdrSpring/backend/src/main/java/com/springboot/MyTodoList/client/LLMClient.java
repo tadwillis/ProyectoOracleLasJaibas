@@ -184,3 +184,5 @@ public class LLMClient {
         private List<String> recommendations;
     }
 }
+
+// Test
